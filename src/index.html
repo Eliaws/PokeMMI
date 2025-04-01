@@ -9,6 +9,7 @@
 
         <title>Pokédex v%VERSION%</title>
         <script type="module" src="/src/main.js"></script>
+        <script type="module" src="/src/tokenDisplay.js"></script>
         <link data-favicon rel="shortcut icon" href="/favicon.png" type="image/png">
     </head>
     <body>
@@ -24,9 +25,12 @@
             </div>
         </div>
         <header class="py-2 bg-slate-900 text-white">
-            <div class="mr-[max(env(safe-area-inset-right),_theme(space.3))] ml-[max(env(safe-area-inset-left),_theme(space.3))]">
+            <div class="mr-[max(env(safe-area-inset-right),_theme(space.3))] ml-[max(env(safe-area-inset-left),_theme(space.3))] justify-between">
                 <div class="mx-auto max-w-6xl">
-                    <h1>Pokédex v%VERSION% - TP CI/CD</h1>
+                    <h1>PokéMMI - Pokédex v%VERSION% - TP CI/CD</h1>
+                </div>
+                <div class="collaborators-header" id="collaborators-header">
+                    <h3>Collaborateurs :</h3>
                 </div>
             </div>
         </header>
