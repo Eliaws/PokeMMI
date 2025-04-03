@@ -35,6 +35,7 @@ import modalPulldownClose from "#src/modal-pulldown-close.js"
 import { listPokemon, setTitleTagForGeneration, hasReachPokedexEnd, rippleEffect } from "./main";
 import loadingImage from "/images/loading.svg";
 import loadingImageRaw from "/images/loading.svg?raw";
+import WaveSurfer from 'wavesurfer.js'
 
 const closeModalBtn = document.querySelector("[data-close-modal]");
 const modal = document.querySelector("[data-pokemon-modal]");
@@ -67,6 +68,7 @@ const loadGenerationBtn = document.querySelector("[data-load-generation]");
 
 const modal_DOM = {
     pkmnName: modal.querySelector("h2"),
+    pokepediaLink: modal.querySelector("[data-pokepedia-link]"),
     img: modal.querySelector("img"),
     category: modal.querySelector("[data-category]"),
     listTypes: modal.querySelector("[data-list-types]"),
@@ -349,6 +351,9 @@ displayModal = async (pkmnData) => {
 
     modal_DOM.pkmnName.textContent = `#${String(pkmnData.pokedex_id).padStart(NB_NUMBER_INTEGERS_PKMN_ID, '0')} ${pkmnData.name.fr}`;
     document.title = `${modal_DOM.pkmnName.textContent} - ${initialPageTitle}`;
+
+    modal_DOM.pokepediaLink.href = `https://pokepedia.fr/${pkmnData.name.fr}`;
+    modal_DOM.pokepediaLink.alt = `Poképédia - ${pkmnData.name.fr}`;
 
     if (listDescriptions?.is_legendary || listDescriptions?.is_mythical) {
         const cloneHighlight = document.importNode(

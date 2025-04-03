@@ -127,6 +127,15 @@ export default {
                 type_dragon: "#5061e1",
                 type_spectre: "#704170",
             },
+            keyframes: {
+                wiggle: {
+                  '0%, 100%': { transform: 'rotate(0deg)' },
+                  '50%': { transform: 'rotate(10deg)' }
+                }
+              },
+              animation: {
+                wiggle: 'wiggle 0.3s ease-in-out infinite alternate',
+              }
         },
     },
     plugins: [typesClassesPlugin],
