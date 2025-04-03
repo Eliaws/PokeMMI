@@ -89,6 +89,7 @@ const modal_DOM = {
     nbGames: modal.querySelector("[data-nb-games]"),
     nbRegionalForms: modal.querySelector("[data-nb-regional-forms]"),
     listRegionalForms: modal.querySelector("[data-list-regional-forms]"),
+    crisPkmn: modal.querySelector("[data-cris-pkmn]"),
     nbForms: modal.querySelector("[data-nb-forms]"),
     listForms: modal.querySelector("[data-list-forms]"),
     spritesContainer: modal.querySelector("[data-sprites-container]"),
@@ -796,6 +797,67 @@ displayModal = async (pkmnData) => {
     }
 
     modal_DOM.listRegionalForms.closest("details").inert = (pkmnData?.formes || []).length === 0;
+
+    async function displayPokemonCries(pokemonId) {
+        const criesContainer = document.querySelector("[data-cris-pkmn]");
+    
+        if (!criesContainer) {
+            console.error("Erreur : Élément data-cris-pkmn introuvable !");
+            return;
+        }
+    
+        // 🔥 Récupération des informations du Pokémon depuis la PokéAPI
+        const pokemonData = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`)
+            .then(response => response.json())
+            .catch(error => console.error("Erreur lors de la récupération du Pokémon :", error));
+    
+        if (!pokemonData) return;
+    
+        // 🎵 Récupération de l'URL du cri du Pokémon
+        const cryUrl = pokemonData.cries?.latest || pokemonData.cries?.legacy;
+        if (!cryUrl) {
+            console.warn("Aucun cri disponible pour ce Pokémon.");
+            return;
+        }
+    
+        criesContainer.innerHTML = "";
+    
+        const cryItem = document.createElement("li");
+        cryItem.classList.add("p-2", "border", "rounded", "flex", "items-center", "gap-2");
+    
+        const playButton = document.createElement("button");
+        playButton.textContent = "▶";
+        playButton.classList.add("bg-blue-500", "text-white", "px-3", "py-1", "rounded", "hover:bg-blue-700");
+    
+        const waveContainer = document.createElement("div");
+        waveContainer.classList.add("w-32", "h-10");
+    
+        cryItem.appendChild(playButton);
+        cryItem.appendChild(waveContainer);
+        criesContainer.appendChild(cryItem);
+    
+        const wavesurfer = WaveSurfer.create({
+            container: waveContainer,
+            waveColor: "gray",
+            progressColor: "blue",
+            cursorColor: "black",
+            barWidth: 2,
+            height: 30,
+        });
+    
+        wavesurfer.load(cryUrl);
+    
+        playButton.addEventListener("click", () => {
+            wavesurfer.playPause();
+            playButton.textContent = wavesurfer.isPlaying() ? "⏸" : "▶";
+        });
+    
+        wavesurfer.on("finish", () => {
+            playButton.textContent = "▶";
+        });
+    }
+
+    displayPokemonCries(pkmnId);
 
     clearTagContent(modal_DOM.statistics);
 
