@@ -389,4 +389,16 @@ window.addEventListener("offline", () => {
     errorPopover.showPopover();
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+    const speedDialBtn = document.querySelector("[data-dial-toggle]");
+    const searchForm = document.getElementById("search-form");
+
+    if (speedDialBtn && searchForm) {
+      speedDialBtn.addEventListener("click", () => {
+        searchForm.classList.toggle("hidden");
+        searchForm.classList.toggle("flex");
+      });
+    }
+  });
+
 export { loadPokedexForGeneration };
