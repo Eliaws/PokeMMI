@@ -110,6 +110,8 @@ listTypes = listTypes.map((item) => ({
     sprite: item.sprites,
     name: {
         fr: cleanString(item.name.fr),
+        en: cleanString(item.name.en),
+        jp: cleanString(item.name.jp),
     },
 }));
 
