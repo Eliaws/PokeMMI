@@ -110,7 +110,6 @@ listTypes = listTypes.map((item) => ({
     sprite: item.sprites,
     name: {
         fr: cleanString(item.name.fr),
-        en: cleanString(item.name.en)
     },
 }));
 
@@ -248,6 +247,8 @@ const loadDetailsModal = async (e, region = null) => {
     displayModal(pkmnData);
 };
 
+
+
 displayModal = async (pkmnData) => {
     modal.inert = true;
     modal.setAttribute("aria-busy", true);
@@ -350,7 +351,7 @@ displayModal = async (pkmnData) => {
 
     modal.setAttribute("aria-labelledby", `Fiche détail de ${pkmnData.name.fr}`);
 
-    modal_DOM.pkmnName.textContent = `#${String(pkmnData.pokedex_id).padStart(NB_NUMBER_INTEGERS_PKMN_ID, '0')} ${pkmnData.name.fr}`;
+    modal_DOM.pkmnName.textContent = `#${String(pkmnData.pokedex_id).padStart(NB_NUMBER_INTEGERS_PKMN_ID, '0')} ${pkmnData.name.fr}|${pkmnData.name.en}|${pkmnData.name.jp}`;
     document.title = `${modal_DOM.pkmnName.textContent} - ${initialPageTitle}`;
 
     modal_DOM.pokepediaLink.href = `https://pokepedia.fr/${pkmnData.name.fr}`;
