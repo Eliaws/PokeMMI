@@ -801,19 +801,12 @@ displayModal = async (pkmnData) => {
     async function displayPokemonCries(pokemonId) {
         const criesContainer = document.querySelector("[data-cris-pkmn]");
     
-        if (!criesContainer) {
-            console.error("Erreur : Élément data-cris-pkmn introuvable !");
-            return;
-        }
-    
-        // 🔥 Récupération des informations du Pokémon depuis la PokéAPI
         const pokemonData = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`)
             .then(response => response.json())
             .catch(error => console.error("Erreur lors de la récupération du Pokémon :", error));
     
         if (!pokemonData) return;
     
-        // 🎵 Récupération de l'URL du cri du Pokémon
         const cryUrl = pokemonData.cries?.latest || pokemonData.cries?.legacy;
         if (!cryUrl) {
             console.warn("Aucun cri disponible pour ce Pokémon.");
