@@ -852,6 +852,44 @@ displayModal = async (pkmnData) => {
 
     displayPokemonCries(pkmnId);
 
+    async function displayPokemonCards(pokemonName) {
+        const cardsContainer = document.querySelector("[data-cartes-pkmn]");
+        const detailsElement = document.querySelector("details[data-cartes-pkmn-details]");
+    
+        cardsContainer.innerHTML = "";
+        const elementCardCounter = document.getElementById("idCardCounter");
+        let cardsCounter = 0;
+    
+        try {
+            const response = await fetch(`https://api.tcgdex.net/v2/fr/cards?name=${pokemonName}`);
+            const cardsData = await response.json();
+    
+            if (!cardsData || cardsData.length === 0) {
+                console.log(`Aucune carte trouvée pour ${pokemonName}.`);
+                return;
+            }
+    
+            detailsElement.style.display = "block";
+    
+            cardsData.forEach(card => {
+                if(!card.image){
+                    return;
+                }
+                const cardElement = document.createElement("img");
+                cardElement.src = card.image ? card.image + "/low.webp" : "";
+                cardElement.alt = card.name;
+                cardElement.classList.add("w-32", "h-auto", "rounded", "shadow", "transition", "hover:scale-105");
+                cardsContainer.appendChild(cardElement);
+                cardsCounter++;
+            });
+            elementCardCounter.textContent = `(${cardsCounter})`;
+        } catch (error) {
+            console.error("Erreur lors de la récupération des cartes TCGdex :", error);
+        }
+    }
+
+    displayPokemonCards(pkmnData.name.fr);
+
     clearTagContent(modal_DOM.statistics);
 
     let statsTotal = 0;
