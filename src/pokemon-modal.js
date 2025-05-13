@@ -459,8 +459,9 @@ displayModal = async (pkmnData) => {
                 const img = clone.querySelector("img");
                 img.alt = `Sprite de ${item.name}`;
                 img.classList.replace("w-52", "w-36");
-                replaceImage(img, `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.pokedex_id}.png`);
-
+                // Mise en commentaire du replaceImage() car les sprites ne sont pas affichés
+                // replaceImage(img, `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.pokedex_id}.png`);
+                img.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.pokedex_id}.png`;
                 const evolutionName = clone.querySelector("p");
                 evolutionName.textContent = `#${String(item.pokedex_id).padStart(NB_NUMBER_INTEGERS_PKMN_ID, '0')} ${item.name}`;
                 evolutionName.classList.toggle("font-bold", item.pokedex_id === pkmnData.pokedex_id);
