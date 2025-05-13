@@ -10,6 +10,7 @@
         <title>Pokédex v%VERSION%</title>
         <script type="module" src="/src/main.js"></script>
         <script type="module" src="/src/tokenDisplay.js"></script>
+        <script type="module" src="/src/search.js" defer></script>
         <link data-favicon rel="shortcut icon" href="/favicon.png" type="image/png">
     </head>
     <body>
@@ -34,19 +35,6 @@
             </div>
         </header>
         <main>
-            <form class="flex items-center max-w-lg mx-auto" method="get" data-form-search-pkmn>   
-                <div class="relative w-full">
-                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                        <img src="/images/pokebola_certo.png" alt="" class="w-5 h-5">
-                    </div>
-                    <input type="text" id="voice-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full ps-10 p-2.5" placeholder="Cherchez un Pokémon..." required />
-                </div>
-                <button type="submit" class="inline-flex items-center py-2.5 px-3 ms-2 text-sm font-medium text-white bg-red-500 rounded-lg border border-red-600 hover:bg-red-700 focus:ring-2 focus:outline-none focus:ring-red-300">
-                    <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-                    </svg>
-                </button>
-            </form>
             <div class="fixed right-[max(env(safe-area-inset-right),_theme(space.3))] top-1/2 -translate-y-1/2 flex" style="z-index:  9999;">
                 <ul class="text-sm py-3 px-2 bg-slate-50 rounded-3xl opacity-0 hidden transition-opacity border border-red-600 border-solid flex-col gap-y-1.5" data-generation-shortcut></ul>
             </div>
@@ -122,6 +110,11 @@
                         ></p>
                     </div>
                     <div class="flex gap-y-1 gap-x-2 items-center">
+                        <button id="open-search-modal" class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+                            <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                            </svg>
+                        </button>
                         <svg data-icon="list" aria-label="Affichage en liste" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7 transition-opacity">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                         </svg>
@@ -417,5 +410,28 @@
                 </div>
             </footer>
         </dialog>
+
+        <!-- Overlay -->
+        <div id="search-modal" class="hidden fixed inset-0 backdrop-blur-md items-center justify-center z-50">
+            <!-- Modal -->
+            <div class="bg-white rounded-lg p-8 w-full max-w-md shadow-lg relative border-2 border-solid border-red-400">
+                <!-- Bouton de fermeture -->
+                <button id="close-search-modal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <!--Recherche -->
+                    <div class="relative w-full">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                            <img src="/images/pokebola_certo.png" alt="" class="w-5 h-5">
+                        </div>
+                        <input type="text" id="poke-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full ps-10 p-2.5" placeholder="Cherchez un Pokémon..." required />
+                        <!-- Conteneur pour la liste d'autocomplétion -->
+                        <ul id="autocomplete-list" class="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 hidden max-h-52 overflow-y-auto shadow-md"></ul>
+                    </div>
+            </div>
+        </div>
     </body>
 </html>
