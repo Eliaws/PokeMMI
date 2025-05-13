@@ -35,3 +35,12 @@ export const fetchAllTypes = async () => {
         throw new Error(error);
     }
 }
+
+export const fetchAllPokemons = async () => {
+    try {
+        const req = await axios.get("https://tyradex.vercel.app/api/v1/pokemon");
+        return req.data;
+    } catch (error) {
+        throw new Error(error);
+    }
+}
