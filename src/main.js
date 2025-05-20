@@ -293,6 +293,7 @@ const loadPokedexForGeneration = async (generation = 1, triggerElement) => {
         buttonGenerationShorcutTemplate.setAttribute("aria-label", `Accéder à la génération ${generation}`);
         buttonGenerationShorcutTemplate.addEventListener("click", () => {
             document.querySelector(`#pokedex-${generation}`).scrollIntoView();
+            setTitleTagForGeneration(); // Correction: update title and active shortcut on click
         });
         generationShortcut.append(generationShortcutTemplate);
         generationShortcut.classList.replace("opacity-0", "opacity-100");
@@ -308,6 +309,7 @@ const loadPokedexForGeneration = async (generation = 1, triggerElement) => {
             },
         });
         window.dispatchEvent(pokedexLoadedEvent);
+        setTitleTagForGeneration(); // Correction: update title and indicator immediately after loading generation
     } catch (error) {
         if (error?.cause?.status === HTTP_NOT_FOUND_CODE_ERROR) {
             listLoadGenerationBtns.forEach((item) => item.inert = true);
