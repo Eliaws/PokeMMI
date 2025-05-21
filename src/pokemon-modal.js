@@ -209,6 +209,7 @@ const generatePokemonSiblingsUI = (pkmnData) => {
         modal_DOM.listSiblings.append(clone);
     }
 }
+const mathRandom05 = 0.5;
 
 const loadDetailsModal = async (e, region = null) => {
     e.preventDefault();
@@ -222,7 +223,7 @@ const loadDetailsModal = async (e, region = null) => {
     if(pkmnData.types) {
         let rippleColor = window.getComputedStyle(document.body).getPropertyValue(`--type-${cleanString(pkmnData.types[0].name)}`)
         $el.removeAttribute("href");
-        if (Math.random() > 0.5 && pkmnData.types[1]) {
+        if (Math.random() > mathRandom05 && pkmnData.types[1]) {
             rippleColor = window.getComputedStyle(document.body).getPropertyValue(`--type-${cleanString(pkmnData.types[1].name)}`)
         }
         await rippleEffect(e, rippleColor);
@@ -437,6 +438,7 @@ displayModal = async (pkmnData) => {
     });
 
     const thresholdNbTotalEvolutions = 7;
+    const maxEvolutionLineLength = 3;
 
     clearTagContent(modal_DOM.listEvolutions);
     const listEvolutionConditions = [];
@@ -444,7 +446,7 @@ displayModal = async (pkmnData) => {
         evolutionLine.forEach((evolution, idx) => {
             const li = document.createElement("li");
             const ol = document.createElement("ol");
-            if(evolution.length > 3) {
+            if(evolution.length > maxEvolutionLineLength) {
                 ol.classList.add(...["grid", "grid-cols-1", "sm:grid-cols-2", "lg:grid-cols-3", "gap-y-6"]);
             } else {
                 ol.classList.add(...["flex"]);
