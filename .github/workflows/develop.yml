@@ -102,6 +102,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    continue-on-error: true
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@master
