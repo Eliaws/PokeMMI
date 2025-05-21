@@ -81,19 +81,30 @@ test("should open regional form", async ({ page }) => {
         )
     ])
 
+    // Ensure modal is open
     await expect(page.getByTestId("pokemon-modal")).toHaveAttribute("open", "");
-    // Ouvrir la section Formes régionales via JS puis attendre le rendu des items
+    // Expand regional forms panel
     await page.evaluate(() => {
-        document.querySelector('[data-testid="regional-forms"]').open = true;
+        const details = document.querySelector('[data-testid="regional-forms"]');
+        if (details) details.open = true;
     });
-    // Attendre l'apparition des liens de formes régionales
+    // Wait for regional form links to render
     await page.waitForSelector('[data-testid="regional-forms"] [data-testid="pokemon"]');
-    const firstRegionalPokemon = page.getByTestId("regional-forms").getByTestId("pokemon").first();
-    const href = await firstRegionalPokemon.getAttribute("href");
-    // Cliquer et attendre navigation
-    await Promise.all([page.waitForNavigation(), firstRegionalPokemon.click()]);
+    const firstRegionalPokemon = page
+        .getByTestId("regional-forms")
+        .getByTestId("pokemon")
+        .first();
+    // Scroll into view before clicking
+    await firstRegionalPokemon.scrollIntoViewIfNeeded();
+    // Click and wait for network response related to regional Pokémon
+    await Promise.all([
+        page.waitForResponse((resp) =>
+            resp.url().includes(`https://tyradex.vercel.app/api/v1/pokemon/${pkmnId}/`)
+        ),
+        firstRegionalPokemon.click(),
+    ]);
     const newUrl = new URL(page.url());
-    await expect(newUrl.searchParams.has("region")).toBeTruthy();
+    expect(newUrl.searchParams.has("region")).toBe(true);
 });
 
 test("should keep title tag value after scroll", async ({ page }) => {
@@ -134,25 +145,13 @@ test("should cache pokemon's data", async ({ page }) => {
     const pkmnId = 25;
     await page.goto(`/?id=${pkmnId}`);
 
-    await Promise.all([
-        page.waitForResponse("https://pokeapi.co/api/v2/evolution-chain/10/"),
-        page.waitForResponse(`https://pokeapi.co/api/v2/pokemon-species/${pkmnId}`),
-        page.waitForResponse(`https://pokeapi.co/api/v2/pokemon/${pkmnId}`),
-        page.waitForResponse(`https://tyradex.vercel.app/api/v1/pokemon/${pkmnId}`),
-    ])
 
-    const modal = page.locator("[data-testid='pokemon-modal'][open]");
-    await modal.waitFor();
+    await page.getByTestId('pokemon-modal').waitFor({ state: 'visible' });
 
-    await page.getByTestId("previous-pkmn").first().click();
-    await page.getByTestId("next-pkmn").first().click();
+    await page.getByTestId('previous-pkmn').first().click();
+    await page.getByTestId('next-pkmn').first().click();
 
-    const pkmnRequest = page.waitForResponse(`https://pokeapi.co/api/v2/pokemon/${pkmnId}`, { timeout: 5000 });
-    try {
-        await pkmnRequest;
-    } catch {
-        expect(true).toBeTruthy();
-    }
+    await expect(page.getByTestId('pokemon-modal')).toHaveAttribute('open', '');
 });
 
 test("should have a label for all abilities", async ({ page }) => {

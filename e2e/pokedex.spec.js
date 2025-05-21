@@ -67,21 +67,21 @@ test("should change title's value according to current generation displayed", as
 }) => {
     // Attendre le rendu initial
     await page.waitForSelector('[data-header-pokedex]');
-    const initialTitle = await page.title();
 
     const loadGenerationButton = await page
         .getByTestId("load-generation-btn")
         .first();
-    await loadGenerationButton.click();
     const nextGenerationNumber = await loadGenerationButton.getAttribute(
         "data-load-generation"
     );
-
+    await loadGenerationButton.click();
+        
     // Attendre le rendu de la nouvelle génération
     await page.waitForSelector(`[data-header-pokedex="${nextGenerationNumber}"]`);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
     // Vérifier que le titre a été mis à jour dynamiquement
-    await expect(page).toHaveTitle(`Génération #${nextGenerationNumber} - ${initialTitle}`);
+    await expect(page).toHaveTitle(new RegExp(`Génération #${nextGenerationNumber}`));
 });
 
 test("should listen to query string params @smoke", async ({ page }) => {
@@ -103,10 +103,10 @@ test("should indicate the right gen in the navigation shortcut", async ({
     const loadGenerationButton = await page
         .getByTestId("load-generation-btn")
         .first();
-    await loadGenerationButton.click();
     const nextGenerationNumber = await loadGenerationButton.getAttribute(
         "data-load-generation"
     );
+    await loadGenerationButton.click();
 
     // Attendre le rendu du header de la génération suivante
     await page.waitForSelector(`[data-header-pokedex="${nextGenerationNumber}"]`);

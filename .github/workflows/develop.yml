@@ -1,6 +1,6 @@
 name: Develop Pipeline
 
-run-name: ${{ github.actor }} is deploying to ${{ github.event.inputs.environment }} 🚀
+run-name: ${{ github.actor }} is deploying to ${{ github.ref_name }} 🚀
 
 on:
   workflow_dispatch:
