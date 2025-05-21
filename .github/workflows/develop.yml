@@ -97,19 +97,19 @@ jobs:
           name: front-end-build
           path: ./dist
 
-  deploy:
-    name: Deploy build to production
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    continue-on-error: true
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@master
-        with:
-          name: front-end-build
-      - name: Fill ssh key
-        run: echo "${{ secrets.SSH_KEY }}" > ~/deploy_key && chmod 400 ~/deploy_key
-      - name: Move files
-        run: rsync -Pavz -e "ssh -i ~/deploy_key -o StrictHostKeyChecking=no" ${{ github.workspace }}/ ${{ secrets.USER }}@${{ secrets.SERVER }}:~/www
+  # deploy:
+  #   name: Deploy build to production
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 45
+  #   continue-on-error: true
+  #   steps:
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@master
+  #       with:
+  #         name: front-end-build
+  #     - name: Fill ssh key
+  #       run: echo "${{ secrets.SSH_KEY }}" > ~/deploy_key && chmod 400 ~/deploy_key
+  #     - name: Move files
+  #       run: rsync -Pavz -e "ssh -i ~/deploy_key -o StrictHostKeyChecking=no" ${{ github.workspace }}/ ${{ secrets.USER }}@${{ secrets.SERVER }}:~/www
           # --exclude-from='rsync-exclude.txt'
