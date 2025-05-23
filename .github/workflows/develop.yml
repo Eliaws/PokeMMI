@@ -97,19 +97,22 @@ jobs:
           name: front-end-build
           path: ./dist
 
-  # deploy:
-  #   name: Deploy build to production
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 45
-  #   continue-on-error: true
-  #   steps:
-  #     - name: Download artifacts
-  #       uses: actions/download-artifact@master
-  #       with:
-  #         name: front-end-build
-  #     - name: Fill ssh key
-  #       run: echo "${{ secrets.SSH_KEY }}" > ~/deploy_key && chmod 400 ~/deploy_key
-  #     - name: Move files
-  #       run: rsync -Pavz -e "ssh -i ~/deploy_key -o StrictHostKeyChecking=no" ${{ github.workspace }}/ ${{ secrets.USER }}@${{ secrets.SERVER }}:~/www
-          # --exclude-from='rsync-exclude.txt'
+  deploy:
+    name: Deploy build to production
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@master
+        with:
+          name: front-end-build
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+      - name: Deploy via ssh password
+        env:
+          SSH_PWD: ${{ secrets.SSH_PWD }}
+        run: |
+          sshpass -p "$SSH_PWD" rsync -Pavz -e "ssh -o StrictHostKeyChecking=no" \
+          ${{ github.workspace }}/ ${ { secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/www/${{ github.ref_name }}/
