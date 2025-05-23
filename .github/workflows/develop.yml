@@ -113,6 +113,9 @@ jobs:
       - name: Deploy via ssh password
         env:
           SSH_PWD: ${{ secrets.SSH_PWD }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_SERVER: ${{ secrets.SSH_SERVER }}
+
         run: |
           sshpass -p "$SSH_PWD" rsync -Pavz -e "ssh -o StrictHostKeyChecking=no" \
-          ${{ github.workspace }}/ ${ { secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/www/${{ github.ref_name }}/
+          "${{ github.workspace }}/" "$SSH_USER@$SSH_SERVER:~/www/${{ github.ref_name }}/"
