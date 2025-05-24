@@ -878,15 +878,17 @@ displayModal = async (pkmnData) => {
             detailsElement.style.display = "block";
     
             cardsData.forEach(card => {
-                if(!card.image){
-                    return;
+                if(card.name.toLowerCase() !== pokemonName.toLowerCase()) {
+                    if(!card.image){
+                        return;
+                    }
+                    const cardElement = document.createElement("img");
+                    cardElement.src = card.image ? card.image + "/low.webp" : "";
+                    cardElement.alt = card.name;
+                    cardElement.classList.add("w-32", "h-auto", "rounded", "shadow", "transition", "hover:scale-105");
+                    cardsContainer.appendChild(cardElement);
+                    cardsCounter++;
                 }
-                const cardElement = document.createElement("img");
-                cardElement.src = card.image ? card.image + "/low.webp" : "";
-                cardElement.alt = card.name;
-                cardElement.classList.add("w-32", "h-auto", "rounded", "shadow", "transition", "hover:scale-105");
-                cardsContainer.appendChild(cardElement);
-                cardsCounter++;
             });
             elementCardCounter.textContent = `(${cardsCounter})`;
         } catch (error) {
