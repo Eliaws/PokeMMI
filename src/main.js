@@ -3,6 +3,8 @@ import {
     fetchPokemon,
 } from "#api";
 
+import "./search.js";
+
 import loadPokemonData from "./pokemon-modal";
 import {
     replaceImage,
