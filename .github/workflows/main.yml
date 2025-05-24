@@ -82,7 +82,7 @@ jobs:
         run: npm ci
       - name: Copy and configure env for build
         run: |
-          cp .env.production.dist .env
+          cp .env.development.dist .env
           echo "VITE_BUILD_DATE=$(date +'%d/%m/%Y %H:%M:%S')" >> .env
           echo "VITE_BUILD_AUTHOR=${{ github.actor }}" >> .env
           echo "VITE_GITHUBTOKEN=${{ secrets.POKEMMI_COLABS }}" >> .env
