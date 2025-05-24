@@ -876,10 +876,12 @@ displayModal = async (pkmnData) => {
             }
     
             detailsElement.style.display = "block";
-    
+            console.log(`Cartes trouvées pour ${pokemonName}:`, cardsData[0].name);
             cardsData.forEach(card => {
-                if(card.name.toLowerCase() !== pokemonName.toLowerCase()) {
-                    if(!card.image){
+                // On vérifie que le nom de la carte correspond exactement au nom du Pokémon (insensible à la casse et sans accents)
+                const normalize = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                if (normalize(card.name) === normalize(pokemonName)) {
+                    if (!card.image) {
                         return;
                     }
                     const cardElement = document.createElement("img");

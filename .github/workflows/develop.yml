@@ -96,7 +96,7 @@ jobs:
           # Use GitHub token to display collaborators in header
           echo "VITE_GITHUBTOKEN=${{ secrets.POKEMMI_COLABS }}" >> "$GITHUB_ENV"
           # Use GitHub ref name to display branch name in header
-          echo "VITE_GITHUB_REF_NAME=${{ github.ref_name }}" >> "$GITHUB_ENV"
+          echo "VITE_DEPLOY_BRANCH=${GITHUB_REF_NAME}"   >> .env
       - name: Create build
         run: npm run build
       - name: Generate artifact
