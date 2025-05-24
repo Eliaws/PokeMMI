@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+const endAngle2 = 2
 // Example : https://houdini.glitch.me/paint
 if (typeof registerPaint !== "undefined") {
     registerPaint(
@@ -62,7 +62,7 @@ if (typeof registerPaint !== "undefined") {
                     y,
                     (geom.width * tick) / speed, // radius
                     0, // startAngle
-                    2 * Math.PI // endAngle
+                    endAngle2 * Math.PI // endAngle
                 );
 
                 ctx.fill();

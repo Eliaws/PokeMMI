@@ -3,6 +3,9 @@ import {
     fetchPokemon,
 } from "#api";
 
+import "./search.js";
+import "./tokenDisplay.js";
+
 import loadPokemonData from "./pokemon-modal";
 import {
     replaceImage,
@@ -95,6 +98,7 @@ const updatePokedexLayout = (_isGridLayout) => {
 
 updatePokedexLayout(isGridLayout);
 
+const counterMax = 350;
 
 export const rippleEffect = (e, color = "#fff") => {
     return new Promise((resolve) => {
@@ -113,7 +117,7 @@ export const rippleEffect = (e, color = "#fff") => {
             const count = Math.floor(now - start);
             $el.style.cssText = `--ripple-x: ${x}; --ripple-y: ${y}; --animation-tick: ${count}; --ripple-color: ${color}`;
 
-            if (count > 350) {
+            if (count > counterMax) {
                 $el.classList.remove('animating');
                 $el.style.cssText = `--animation-tick: 0`;
 
@@ -124,6 +128,8 @@ export const rippleEffect = (e, color = "#fff") => {
         });
     })
 }
+
+const loadDetailsModal_number05 = 0.5;
 
 const loadDetailsModal = async (e) => {
     e.preventDefault();
@@ -140,7 +146,7 @@ const loadDetailsModal = async (e) => {
     const href = $el.href;
 
     $el.removeAttribute("href");
-    if (Math.random() > 0.5 && pkmnData.types[1]) {
+    if (Math.random() > loadDetailsModal_number05 && pkmnData.types[1]) {
         rippleColor = window.getComputedStyle(document.body).getPropertyValue(`--type-${cleanString(pkmnData.types[1].name)}`);
     }
     await rippleEffect(e, rippleColor);
@@ -392,3 +398,11 @@ window.addEventListener("offline", () => {
 });
 
 export { loadPokedexForGeneration };
+
+document.addEventListener("DOMContentLoaded", () => {
+  const branch = import.meta.env.VITE_DEPLOY_BRANCH;
+  if (branch === "develop") {
+    const span = document.getElementById("deploy-branch");
+    if (span) span.textContent = `(${branch})`;
+  }
+});

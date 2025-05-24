@@ -209,6 +209,7 @@ const generatePokemonSiblingsUI = (pkmnData) => {
         modal_DOM.listSiblings.append(clone);
     }
 }
+const mathRandom05 = 0.5;
 
 const loadDetailsModal = async (e, region = null) => {
     e.preventDefault();
@@ -222,7 +223,7 @@ const loadDetailsModal = async (e, region = null) => {
     if(pkmnData.types) {
         let rippleColor = window.getComputedStyle(document.body).getPropertyValue(`--type-${cleanString(pkmnData.types[0].name)}`)
         $el.removeAttribute("href");
-        if (Math.random() > 0.5 && pkmnData.types[1]) {
+        if (Math.random() > mathRandom05 && pkmnData.types[1]) {
             rippleColor = window.getComputedStyle(document.body).getPropertyValue(`--type-${cleanString(pkmnData.types[1].name)}`)
         }
         await rippleEffect(e, rippleColor);
@@ -437,6 +438,7 @@ displayModal = async (pkmnData) => {
     });
 
     const thresholdNbTotalEvolutions = 7;
+    const maxEvolutionLineLength = 3;
 
     clearTagContent(modal_DOM.listEvolutions);
     const listEvolutionConditions = [];
@@ -444,7 +446,7 @@ displayModal = async (pkmnData) => {
         evolutionLine.forEach((evolution, idx) => {
             const li = document.createElement("li");
             const ol = document.createElement("ol");
-            if(evolution.length > 3) {
+            if(evolution.length > maxEvolutionLineLength) {
                 ol.classList.add(...["grid", "grid-cols-1", "sm:grid-cols-2", "lg:grid-cols-3", "gap-y-6"]);
             } else {
                 ol.classList.add(...["flex"]);
@@ -874,17 +876,21 @@ displayModal = async (pkmnData) => {
             }
     
             detailsElement.style.display = "block";
-    
+            console.log(`Cartes trouvées pour ${pokemonName}:`, cardsData[0].name);
             cardsData.forEach(card => {
-                if(!card.image){
-                    return;
+                // On vérifie que le nom de la carte correspond exactement au nom du Pokémon (insensible à la casse et sans accents)
+                const normalize = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                if (normalize(card.name) === normalize(pokemonName)) {
+                    if (!card.image) {
+                        return;
+                    }
+                    const cardElement = document.createElement("img");
+                    cardElement.src = card.image ? card.image + "/low.webp" : "";
+                    cardElement.alt = card.name;
+                    cardElement.classList.add("w-32", "h-auto", "rounded", "shadow", "transition", "hover:scale-105");
+                    cardsContainer.appendChild(cardElement);
+                    cardsCounter++;
                 }
-                const cardElement = document.createElement("img");
-                cardElement.src = card.image ? card.image + "/low.webp" : "";
-                cardElement.alt = card.name;
-                cardElement.classList.add("w-32", "h-auto", "rounded", "shadow", "transition", "hover:scale-105");
-                cardsContainer.appendChild(cardElement);
-                cardsCounter++;
             });
             elementCardCounter.textContent = `(${cardsCounter})`;
         } catch (error) {

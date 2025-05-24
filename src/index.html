@@ -26,11 +26,14 @@
             </div>
         </div>
         <header class="py-2 bg-slate-900 text-white">
-            <div class="mr-[max(env(safe-area-inset-right),_theme(space.3))] ml-[max(env(safe-area-inset-left),_theme(space.3))] mx-auto max-w-6xl flex items-center justify-between">
-                <h1 class="text-xl font-bold">PokéMMI - Pokédex v%VERSION% - TP CI/CD</h1>
-                <div class="flex items-center gap-4">
-                    <h3 class="text-lg font-semibold">Collaborateurs :</h3>
-                    <div id="collaborators-header" class="flex gap-3"></div>
+            <div class="mr-[max(env(safe-area-inset-right),_theme(space.3))] ml-[max(env(safe-area-inset-left),_theme(space.3))]">
+                <div class="mx-auto max-w-6xl flex items-center justify-between">
+                    <h1 class="text-xl font-bold">
+                    PokéMMI – Pokédex v%VERSION% <span id="deploy-branch" class="text-sm text-gray-300"></span> – TP CI/CD
+                    </h1>
+                    <div class="flex items-center gap-4">
+                        <button id="open-apis-modal" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">À propos</button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -431,6 +434,42 @@
                         <!-- Conteneur pour la liste d'autocomplétion -->
                         <ul id="autocomplete-list" class="absolute z-10 bg-white border border-gray-300 rounded-lg w-full mt-1 hidden max-h-52 overflow-y-auto shadow-md"></ul>
                     </div>
+            </div>
+        </div>
+
+        <!-- Modal Collaborateurs -->
+        <div id="collaborators-modal" class="hidden fixed inset-0 backdrop-blur-md bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-full max-w-lg relative border-2 border-solid border-blue-400">
+                <button id="close-collaborators-modal" class="absolute top-2 right-2 text-xl hover:bg-gray-200">&times;</button>
+
+            </div>
+        </div>
+        <!-- Modal APIs -->
+        <div id="apis-modal" class="hidden fixed inset-0 backdrop-blur-md bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-full max-w-lg relative border-2 border-solid border-green-400">
+                <button id="close-apis-modal" class="absolute top-2 right-2 text-xl hover:bg-gray-200">&times;</button>
+                <div class="">
+                    <h3 class="text-lg font-semibold mb-1">Collaborateurs</h3>
+                    <ul id="collaborators-list" class="space-y-2"></ul>
+                </div>
+                <div class="mt-4">
+                    <h3 class="text-lg font-semibold mb-1">APIs utilisées :</h3>
+                    <ul id="apis-list" class="list-disc list-inside">
+                        <li><a href="https://pokeapi.co/" target="_blank" class="hover:text-blue-500 hover:underline">PokeAPI</a></li>
+                        <li><a href="https://tyradex.vercel.app/" target="_blank" class="hover:text-blue-500 hover:underline">Tyradex</a></li>
+                        <li><a href="https://tcgdex.dev/" target="_blank" class="hover:text-blue-500 hover:underline">TCGdex</a></li>
+                    </ul>
+                </div>
+                <div class="mt-4">
+                    <h3 class="text-lg font-semibold mb-1">Icônes utilisés :</h3>
+                    <ul id="apis-list" class="list-disc list-inside">
+                        <li><a href="https://github.com/partywhale/pokemon-type-icons" target="_blank" class="hover:text-blue-500 hover:underline">Icônes types pokemons</a></li>
+                    </ul>
+                </div>
+                <div class="mt-4 flex flex-wrap items-center justify-center gap-4">
+                    <img src="/images/CY Cergy Paris Universite_coul.png" alt="CY Cergy Paris Universite" class="w-1/2 sm:w-1/4 h-auto object-contain" />
+                    <img src="/images/CY IUT_coul.png" alt="CY IUT" class="w-1/2 sm:w-1/4 h-auto object-contain" />
+                </div>
             </div>
         </div>
     </body>

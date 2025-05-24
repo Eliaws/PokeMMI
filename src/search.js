@@ -1,6 +1,8 @@
 //import { fetchPokemonForGeneration } from "./api/tyradex.js"; Méthode pour afficher tous les pokemons dans la barre de recherche à la place de la génération 1
 import { fetchAllPokemons } from "./api/tyradex.js";
 
+const SEARCH_MODAL_TIMEOUT_MS = 1500; // 1.5 secondes
+
 document.addEventListener("DOMContentLoaded", async () => {
     const searchInput = document.getElementById("poke-search");
     const autocompleteList = document.getElementById("autocomplete-list");
@@ -105,6 +107,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 inputSearch.value = "";
             }
         });
-    }, 1500);
+    }, SEARCH_MODAL_TIMEOUT_MS);
 
 });

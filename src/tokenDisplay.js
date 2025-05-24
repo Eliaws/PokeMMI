@@ -25,19 +25,31 @@ async function getCollaborators() {
 
 async function displayCollaborators() {
   const collaborators = await getCollaborators();
-  const header = document.getElementById("collaborators-header");
+  const list = document.getElementById("collaborators-list");
 
-  if (!header) {
-    console.error("Erreur : élément #collaborators-header introuvable !");
+  if (!list) {
+    console.error("Erreur : élément #collaborators-list introuvable !");
     return;
   }
 
-  header.innerHTML = collaborators.map(collab => `
-    <div class="flex items-center gap-2">
-      <img class="w-8 h-8 rounded-full border" src="${collab.avatar_url}" alt="${collab.login}">
-      <a class="text-sm font-medium text-white hover:underline" href="${collab.html_url}" target="_blank">${collab.login}</a>
-    </div>
+  list.innerHTML = collaborators.map(collab => `
+    <li class="flex items-center gap-2">
+      <img class="w-8 h-8 rounded-full border-2" src="${collab.avatar_url}" alt="${collab.login}">
+      <a class="text-sm font-medium text-gray-800 hover:underline hover:text-blue-500 hover:font-bold" href="${collab.html_url}" target="_blank">${collab.login}</a>
+    </li>
   `).join('');
 }
 
-document.addEventListener("DOMContentLoaded", displayCollaborators);
+document.addEventListener("DOMContentLoaded", () => {
+  // APIs modal controls
+  const openApisBtn = document.getElementById('open-apis-modal');
+  const apisModal = document.getElementById('apis-modal');
+  const closeApisBtn = document.getElementById('close-apis-modal');
+  openApisBtn?.addEventListener('click', async () => {
+    await displayCollaborators();
+    apisModal?.classList.remove('hidden');
+  });
+  closeApisBtn?.addEventListener('click', () => {
+    apisModal?.classList.add('hidden');
+  });
+});
