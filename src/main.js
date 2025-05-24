@@ -398,3 +398,11 @@ window.addEventListener("offline", () => {
 });
 
 export { loadPokedexForGeneration };
+
+document.addEventListener("DOMContentLoaded", () => {
+  const branch = import.meta.env.VITE_DEPLOY_BRANCH;
+  if (branch === "develop") {
+    const span = document.getElementById("deploy-branch");
+    if (span) span.textContent = `(${branch})`;
+  }
+});
