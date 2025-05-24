@@ -1,9 +1,8 @@
 name: Main Pipeline
 
-run-name: ${{ github.actor }} deploy on ${{ github.ref_name }}
+run-name: ${{ github.actor }} deploy on ${{ github.ref_name }} 🚀
 
 on:
-  pull_request:
   push:
     branches: [main]
 
@@ -99,7 +98,7 @@ jobs:
           </Files>
           EOF
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: site-dist
           path: dist
@@ -110,7 +109,7 @@ jobs:
     needs: build
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: site-dist
       - name: Install sshpass
