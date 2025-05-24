@@ -49,6 +49,8 @@ export const getRegionForName = {
     "letsgo-kanto": "Kanto (Let's Go Evoli/Pickachu)",
     "original-poni": "Poni (Original)",
     "updated-poni": "Poni (Nouveau)",
+    "updated-hoenn": "Hoenn (Nouveau)",
+    "original-galar": "Galar (Original)",
     "original-sinnoh": "Sinnoh (Original)",
     "updated-sinnoh": "Sinnoh (Nouveau)",
     "isle-of-armor": "Isolarmure (Galar)",
