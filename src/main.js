@@ -237,6 +237,15 @@ const loadPokedexForGeneration = async (generation = 1, triggerElement) => {
         })
         pokedexContainer.append(cloneDex);
 
+        // Réassocier l'ouverture du modal de recherche pour les boutons ajoutés dynamiquement
+        cloneDex.querySelectorAll('#open-search-modal').forEach(button => {
+            button.addEventListener('click', () => {
+                const searchModal = document.getElementById('search-modal');
+                searchModal.classList.remove('hidden');
+                searchModal.classList.add('flex');
+            });
+        });
+
         nonRegionalPokedexData.forEach((item, index) => {
             url.searchParams.set("id", item.pokedex_id)
 

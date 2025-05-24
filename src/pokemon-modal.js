@@ -11,6 +11,7 @@ import {
 
 import {
     getVersionForName,
+    getRegionForName,
     cleanString,
     clearTagContent,
     replaceImage,
@@ -99,6 +100,7 @@ const modal_DOM = {
     catchRate: modal.querySelector("[data-catch-rate]"),
     acronymVersions: modal.querySelector("[data-pkmn-acronym-versions]"),
     noEvolutionsText: modal.querySelector("[data-no-evolutions]"),
+    pokedexRegionNb: modal.querySelector("[data-pkdx-nb]"),
 };
 
 const dataCache = {};
@@ -876,7 +878,6 @@ displayModal = async (pkmnData) => {
             }
     
             detailsElement.style.display = "block";
-            console.log(`Cartes trouvées pour ${pokemonName}:`, cardsData[0].name);
             cardsData.forEach(card => {
                 // On vérifie que le nom de la carte correspond exactement au nom du Pokémon (insensible à la casse et sans accents)
                 const normalize = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -899,6 +900,33 @@ displayModal = async (pkmnData) => {
     }
 
     displayPokemonCards(pkmnData.name.fr);
+
+    async function displayPokemonRegionNb(pokemonId) {
+        try {
+            let descriptions = dataCache[pokemonId]?.descriptions;
+            if (!descriptions) {
+                descriptions = await fetchPokemonExternalData(pokemonId);
+                dataCache[pokemonId] = dataCache[pokemonId] || {};
+                dataCache[pokemonId].descriptions = descriptions;
+            }
+            const listEl = document.getElementById('pokedex-numbers');
+            if (!listEl) return;
+            clearTagContent(listEl);
+            const entries = descriptions.pokedex_numbers || [];
+            entries.forEach(({ entry_number, pokedex }) => {
+                const regionKey = pokedex.name;
+                const label = getRegionForName[regionKey] || regionKey.charAt(0).toUpperCase() + regionKey.slice(1);
+                const li = document.createElement('li');
+                li.textContent = `${label} : #${entry_number}`;
+                listEl.append(li);
+            });
+        } catch (error) {
+            console.error('Erreur récupération numéros pokedex :', error);
+        }
+     }
+
+    // Affiche les numéros de pokedex pour ce Pokémon
+    displayPokemonRegionNb(pkmnData.pokedex_id);
 
     clearTagContent(modal_DOM.statistics);
 
