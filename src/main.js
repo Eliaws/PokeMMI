@@ -4,6 +4,7 @@ import {
 } from "#api";
 
 import "./search.js";
+import "./tokenDisplay.js";
 
 import loadPokemonData from "./pokemon-modal";
 import {
