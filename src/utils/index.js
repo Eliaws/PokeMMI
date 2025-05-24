@@ -36,6 +36,38 @@ export const getVersionForName = {
     "legends-arceus": "Légendes Pokémon : Arceus",
 };
 
+export const getRegionForName = {
+    national: "National",
+    "kalos-central": "Kalos Central",
+    "original-johto": "Johto (Original)",
+    "updated-johto": "Johto (Nouveau)",
+    "updated-unova": "Unys (Nouveau)",
+    "original-alola": "Alola (Original)",
+    "original-melemele": "Mele-Mele (Original)",
+    "updated-alola": "Alola (Nouveau)",
+    "updated-melemele": "Mele-Mele (Nouveau)",
+    "letsgo-kanto": "Kanto (Let's Go Evoli/Pickachu)",
+    "original-poni": "Poni (Original)",
+    "updated-poni": "Poni (Nouveau)",
+    "original-sinnoh": "Sinnoh (Original)",
+    "updated-sinnoh": "Sinnoh (Nouveau)",
+    "isle-of-armor": "Isolarmure (Galar)",
+    "kalos-mountain" : "Montagnes de Kalos",
+    "original-ulaula": "Ula-Ula (Original)",
+    "updated-ulaula": "Ula-Ula (Nouveau)",
+    kitakami: "Kitakami",
+    kanto: "Kanto",
+    johto: "Johto",
+    hoenn: "Hoenn",
+    sinnoh: "Sinnoh",
+    unova: "Unys",
+    kalos: "Kalos",
+    alola: "Alola",
+    galar: "Galar",
+    paldea: "Paldea",
+    hisui: "Hisui",
+}
+
 export const cleanString = (string) =>
     string
         .toLowerCase()
