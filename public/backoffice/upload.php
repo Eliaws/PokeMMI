@@ -1,9 +1,9 @@
 <?php
 
-$host = getenv('DB_HOST');
-$user = getenv('DB_USER');
-$pass = getenv('DB_PASS');
-$db   = getenv('DB_NAME');
+$host = getenv('VITE_DB_HOST');
+$user = getenv('VITE_DB_USER');
+$pass = getenv('VITE_DB_PASS');
+$db   = getenv('VITE_DB_NAME');
 
 // Connexion sans base sélectionnée pour créer la base si elle n'existe pas
 $conn = new mysqli($host, $user, $pass);
