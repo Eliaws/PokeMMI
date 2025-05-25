@@ -22,9 +22,6 @@ export default defineConfig({
         rollupOptions: {
             input: [
                 "src/index.html",
-                "backoffice/index.php",
-                "backoffice/upload.php",
-                "backoffice/upload_handler.php"
             ],
         },
     },
