@@ -20,7 +20,12 @@ export default defineConfig({
     build: {
         target: "esnext",
         rollupOptions: {
-            input: ["src/index.html"],
+            input: [
+                "src/index.html",
+                "backoffice/index.php",
+                "backoffice/upload.php",
+                "backoffice/upload_handler.php"
+            ],
         },
     },
     define: {
