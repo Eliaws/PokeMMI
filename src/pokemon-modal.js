@@ -38,6 +38,9 @@ import loadingImage from "/images/loading.svg";
 import loadingImageRaw from "/images/loading.svg?raw";
 import WaveSurfer from 'wavesurfer.js'
 
+// Carte des jaquettes chargées une seule fois
+let coverMap = null;
+
 const closeModalBtn = document.querySelector("[data-close-modal]");
 const modal = document.querySelector("[data-pokemon-modal]");
 
@@ -730,23 +733,42 @@ displayModal = async (pkmnData) => {
         modal_DOM.spritesContainer.append(listPokemonSpritesTemplate);
     });
 
-    clearTagContent(modal_DOM.listGames);
+    // Load coverMap for jaquettes if not loaded
+    if (!coverMap) {
+        try {
+            const res = await fetch('/api/list');
+            const list = await res.json();
+            coverMap = new Map(list.map(item => [item.version_name, item.filename]));
+        } catch (e) {
+            console.error('Failed to load jaquettes list', e);
+            coverMap = new Map();
+        }
+    }
 
-    const listGames = [...listDescriptions.flavor_text_entries, ...pkmnExtraData.game_indices].filter((value, index, self) =>
-        index === self.findIndex((t) => (
-            t.version.name === value.version.name
-        ))
-    )
-    .map((item) => ({...item, order: Object.keys(getVersionForName).findIndex((game) => item.version.name === game)}))
-    .sort((a, b) => Number(a.order) - Number(b.order));
+    clearTagContent(modal_DOM.listGames);
+    const listGames = [...listDescriptions.flavor_text_entries, ...pkmnExtraData.game_indices]
+        // Unique by version.name
+        .filter((value, index, self) => self.findIndex(v => v.version?.name === value.version?.name) === index);
 
     listGames.forEach((item) => {
+        const versionKey = item.version.name;
+        const versionName = getVersionForName[versionKey] || "Unknown";
         const li = document.createElement("li");
-        const versionName = getVersionForName[item.version.name] || "Unknown";
-        li.textContent = versionName;
-
+        li.classList.add('flex', 'items-center', 'gap-2', 'mb-2');
+        const filename = coverMap.get(versionKey);
+        if (filename) {
+            const img = document.createElement('img');
+            img.src = `/backoffice/uploads/${filename}`;
+            img.alt = versionName;
+            img.classList.add('w-8', 'h-8', 'object-contain');
+            li.append(img);
+        }
+        const span = document.createElement('span');
+        span.textContent = versionName;
+        li.append(span);
         modal_DOM.listGames.append(li);
     });
+
     modal_DOM.nbGames.textContent = ` (${listGames.length})`;
     modal_DOM.listGames.closest("details").inert = listGames.length === 0;
 

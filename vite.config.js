@@ -22,6 +22,7 @@ export default defineConfig({
         rollupOptions: {
             input: [
                 "src/index.html",
+                "public/backoffice/index.html",
             ],
         },
     },
