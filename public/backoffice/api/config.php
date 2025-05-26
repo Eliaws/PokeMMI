@@ -1,9 +1,15 @@
 <?php
 // filepath: c:\Users\eliax\Desktop\repo_github\PokeMMI\public\backoffice\api\config.php
 
+clearstatcache(true); // Clear PHP's file stat cache
+
+$env_php_path = __DIR__ . '/env.php';
+$env_php_exists_check_for_inclusion = file_exists($env_php_path);
+$env_php_readable_check_for_inclusion = is_readable($env_php_path);
+
 // Load environment variables from env.php if it exists
-if (file_exists(__DIR__ . '/env.php')) {
-    require_once __DIR__ . '/env.php';
+if ($env_php_exists_check_for_inclusion) {
+    require_once $env_php_path;
 }
 
 $db_host = getenv('DB_HOST');
@@ -17,21 +23,32 @@ if (empty($db_host)) {
     if (!headers_sent()) {
         header('Content-Type: application/json');
     }
-    // Log the issue
-    if (function_exists('log_message')) { // Check if log_message is available from upload.php context
-        log_message("CRITICAL: DB_HOST is empty. Check env.php and GitHub Actions secrets.");
+
+    $debug_payload = [
+        "env_php_path_checked" => $env_php_path,
+        "env_php_exists_when_checked_for_inclusion" => $env_php_exists_check_for_inclusion ? 'yes' : 'no',
+        "env_php_readable_when_checked_for_inclusion" => $env_php_readable_check_for_inclusion ? 'yes' : 'no',
+        "db_host_retrieved" => $db_host ?: false, // getenv returns false if not found
+        "db_user_retrieved" => getenv('DB_USER') ?: false,
+        "db_pass_retrieved_status" => getenv('DB_PASS') ? 'set' : 'not_set', // Avoid logging actual password
+        "db_name_retrieved" => getenv('DB_NAME') ?: false,
+        "open_basedir_config" => ini_get('open_basedir') ?: 'not_set_or_empty',
+        "api_directory_listing" => scandir(__DIR__) ?: 'scandir_failed_or_empty',
+        "php_script_user" => get_current_user(),
+        "php_version" => PHP_VERSION,
+        "server_software" => isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : 'unknown'
+    ];
+
+    // Log the issue if log_message is available (it might not be if upload.php hasn't defined it yet)
+    if (function_exists('log_message')) { 
+        log_message("CRITICAL: DB_HOST is empty. env.php not loaded or variables not set. Debug: " . json_encode($debug_payload));
     }
+    
     // Output JSON and exit
     echo json_encode([
         "success" => false, 
-        "message" => "Configuration error: DB_HOST is not set. Please check server environment variables.",
-        "debug_info" => [
-            "db_host_retrieved" => $db_host, // will be empty or null
-            "db_user_retrieved" => getenv('DB_USER') ? 'set' : 'empty',
-            "db_pass_retrieved" => getenv('DB_PASS') ? 'set' : 'empty', // Avoid logging actual password
-            "db_name_retrieved" => getenv('DB_NAME') ? 'set' : 'empty',
-            "env_php_exists" => file_exists(__DIR__ . '/env.php') ? 'yes' : 'no'
-        ]
+        "message" => "Configuration error: DB_HOST is not set. env.php might not be loaded or readable, or variables are missing.",
+        "debug_info" => $debug_payload
     ]);
     exit;
 }
