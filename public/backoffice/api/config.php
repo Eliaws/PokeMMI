@@ -11,6 +11,31 @@ $db_user = getenv('DB_USER');
 $db_pass = getenv('DB_PASS');
 $db_name = getenv('DB_NAME');
 
+// Early exit for debugging if DB_HOST is not set
+if (empty($db_host)) {
+    // Attempt to set a more specific content type if headers haven't been sent
+    if (!headers_sent()) {
+        header('Content-Type: application/json');
+    }
+    // Log the issue
+    if (function_exists('log_message')) { // Check if log_message is available from upload.php context
+        log_message("CRITICAL: DB_HOST is empty. Check env.php and GitHub Actions secrets.");
+    }
+    // Output JSON and exit
+    echo json_encode([
+        "success" => false, 
+        "message" => "Configuration error: DB_HOST is not set. Please check server environment variables.",
+        "debug_info" => [
+            "db_host_retrieved" => $db_host, // will be empty or null
+            "db_user_retrieved" => getenv('DB_USER') ? 'set' : 'empty',
+            "db_pass_retrieved" => getenv('DB_PASS') ? 'set' : 'empty', // Avoid logging actual password
+            "db_name_retrieved" => getenv('DB_NAME') ? 'set' : 'empty',
+            "env_php_exists" => file_exists(__DIR__ . '/env.php') ? 'yes' : 'no'
+        ]
+    ]);
+    exit;
+}
+
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 if ($conn->connect_error) {

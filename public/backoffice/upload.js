@@ -10,10 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     messageDiv.textContent = message;
     messageDiv.className = `p-4 rounded-md ${isSuccess ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
     messageBanner.appendChild(messageDiv);
-    // Optionally, clear the message after some time
+   
     setTimeout(() => {
         messageBanner.innerHTML = '';
-    }, 5000); // Clears after 5 seconds
+    }, 10000);
   }
 
   // Populate the select dropdown (game versions)
