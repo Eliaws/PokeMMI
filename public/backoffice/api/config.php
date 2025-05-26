@@ -1,5 +1,4 @@
 <?php
-// filepath: c:\Users\eliax\Desktop\repo_github\PokeMMI\public\backoffice\api\config.php
 
 clearstatcache(true); // Clear PHP's file stat cache
 

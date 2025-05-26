@@ -1,5 +1,4 @@
 <?php
-// filepath: c:\Users\eliax\Desktop\repo_github\PokeMMI\public\backoffice\api\covers.php
 include 'config.php';
 
 header('Content-Type: application/json');

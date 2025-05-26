@@ -163,10 +163,15 @@ jobs:
           echo "?>" >> "$API_DIR/env.php"
 
           echo "Creating .htaccess in $API_DIR on runner"
-          echo "<Files env.php>" > "$API_DIR/.htaccess"
-          echo "    Require all denied" >> "$API_DIR/.htaccess"
-          echo "</Files>" >> "$API_DIR/.htaccess"
-          echo "<Files config.php>" >> "$API_DIR/.htaccess"
+          # Temporarily comment out the restriction for env.php to test if it interferes with PHP include
+          # echo "<Files env.php>" > "$API_DIR/.htaccess"
+          # echo "    Require all denied" >> "$API_DIR/.htaccess"
+          # echo "</Files>" >> "$API_DIR/.htaccess"
+          # echo "" >> "$API_DIR/.htaccess" # Add a newline if both blocks were active
+
+          # Keep restriction for config.php
+          # If env.php block was removed, .htaccess will be created/overwritten starting with this:
+          echo "<Files config.php>" > "$API_DIR/.htaccess" 
           echo "    Require all denied" >> "$API_DIR/.htaccess"
           echo "</Files>" >> "$API_DIR/.htaccess"
 
