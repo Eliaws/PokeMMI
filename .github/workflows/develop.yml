@@ -142,11 +142,11 @@ jobs:
           echo "putenv('DB_NAME=${DB_NAME}');" >> "$API_DIR/env.php"
           echo "?>" >> "$API_DIR/env.php"
 
-          echo "<Files \\"env.php\\">" > "$API_DIR/.htaccess"
+          echo "<Files \"env.php\">" > "$API_DIR/.htaccess"
           echo "    Require all denied" >> "$API_DIR/.htaccess"
           echo "</Files>" >> "$API_DIR/.htaccess"
           echo "" >> "$API_DIR/.htaccess"
-          echo "<Files \\"config.php\\">" >> "$API_DIR/.htaccess"
+          echo "<Files \"config.php\">" >> "$API_DIR/.htaccess"
           echo "    Require all denied" >> "$API_DIR/.htaccess"
           echo "</Files>" >> "$API_DIR/.htaccess"
 
@@ -160,13 +160,17 @@ jobs:
           SSH_SERVER: ${{ secrets.SSH_SERVER }}
           DEPLOY_PATH: "~/www/${{ github.ref_name }}"
         run: |
+          echo "--- Listing workspace contents ---"
+          ls -la "${{ github.workspace }}"
+          echo "--- Listing dist directory contents (before frontend deploy) ---"
+          ls -la "${{ github.workspace }}/dist"
+          
+          echo "--- Attempting to deploy frontend ---"
           # Deploy built frontend (from dist/) to the root of DEPLOY_PATH
-          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" \\
-            "${{ github.workspace }}/dist/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/"
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" "${{ github.workspace }}/dist/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/"
 
+          echo "--- Attempting to deploy backoffice ---"
           # Deploy the entire public/backoffice directory (which includes api/ with generated env.php & .htaccess, and uploads/)
-          # This assumes the server expects PHP files under $DEPLOY_PATH/public/backoffice/
           # Create the target directory structure on the server first for public/backoffice
           sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_SERVER" "mkdir -p $DEPLOY_PATH/public/backoffice"
-          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" \\
-            "${{ github.workspace }}/public/backoffice/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/public/backoffice/"
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" "${{ github.workspace }}/public/backoffice/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/public/backoffice/"
