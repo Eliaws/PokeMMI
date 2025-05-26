@@ -105,63 +105,75 @@ jobs:
       - name: Create build
         run: npm run build
       - name: Generate artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
-          name: front-end-build
+          name: pokemmi-frontend-build
           path: ./dist
 
   deploy:
-    name: Deploy build to production
-    needs: build
+    needs: build # Assurez-vous que ce job s'exécute après le job de build
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    env: # Définissez vos variables d'environnement ici, en utilisant des secrets
+      SSH_PWD: ${{ secrets.YOUR_SSH_PASSWORD_SECRET }} # Remplacez par le nom de votre secret
+      SSH_USER: ${{ secrets.YOUR_SSH_USER_SECRET }}   # Remplacez par le nom de votre secret
+      SSH_SERVER: ${{ secrets.YOUR_SSH_SERVER_SECRET }} # Remplacez par le nom de votre secret
+      DEPLOY_PATH: ${{ secrets.YOUR_DEPLOY_PATH_SECRET }} # Remplacez par le nom de votre secret
+      # DB_HOST, DB_USER, DB_PASS, DB_NAME sont aussi nécessaires pour env.php
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Pour accéder à public/backoffice
 
       - name: Download frontend build artifact
         uses: actions/download-artifact@v4
         with:
-          name: pokemmi-frontend-build
-          path: dist # Download to a 'dist' subfolder
+          name: pokemmi-frontend-build # Doit correspondre au nom de l'artefact téléversé
+          path: dist # L'artefact sera téléchargé dans ./dist/
 
-      - name: Create env.php
+      - name: Deploy Frontend (dist/)
         run: |
-          # Utiliser ${{ github.workspace }} pour un chemin absolu sur l'exécuteur
-          ENV_DIR="${{ github.workspace }}/dist/public/backoffice/api"
-          mkdir -p "$ENV_DIR"
-          echo "<?php" > "$ENV_DIR/env.php"
-          echo "putenv('DB_HOST=${{ secrets.DB_HOST }}');" >> "$ENV_DIR/env.php"
-          echo "putenv('DB_USER=${{ secrets.DB_USER }}');" >> "$ENV_DIR/env.php"
-          echo "putenv('DB_PASS=${{ secrets.DB_PASS }}');" >> "$ENV_DIR/env.php"
-          echo "putenv('DB_NAME=${{ secrets.DB_NAME }}');" >> "$ENV_DIR/env.php"
-          echo "?>" >> "$ENV_DIR/env.php"
+          echo "--- Deploying frontend from dist/ ---"
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" "${{ github.workspace }}/dist/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/"
         shell: bash
 
-      - name: Verify env.php creation on runner
+      - name: Create env.php and .htaccess for Backoffice
         run: |
-          echo "Listing contents of ${{ github.workspace }}/dist/public/backoffice/api/ on runner:"
-          ls -la ${{ github.workspace }}/dist/public/backoffice/api/
+          API_DIR="${{ github.workspace }}/public/backoffice/api"
+          echo "Ensuring API directory exists at $API_DIR"
+          mkdir -p "$API_DIR"
+
+          echo "Creating env.php in $API_DIR"
+          echo "<?php" > "$API_DIR/env.php"
+          echo "putenv('DB_HOST=$DB_HOST');" >> "$API_DIR/env.php"
+          echo "putenv('DB_USER=$DB_USER');" >> "$API_DIR/env.php"
+          echo "putenv('DB_PASS=$DB_PASS');" >> "$API_DIR/env.php"
+          echo "putenv('DB_NAME=$DB_NAME');" >> "$API_DIR/env.php"
+          echo "?>" >> "$API_DIR/env.php"
+
+          echo "Creating .htaccess in $API_DIR"
+          echo "<Files env.php>" > "$API_DIR/.htaccess"
+          echo "    Require all denied" >> "$API_DIR/.htaccess"
+          echo "</Files>" >> "$API_DIR/.htaccess"
+          echo "<Files config.php>" >> "$API_DIR/.htaccess"
+          echo "    Require all denied" >> "$API_DIR/.htaccess"
+          echo "</Files>" >> "$API_DIR/.htaccess"
+
+          echo "Listing contents of $API_DIR on runner to verify creation:"
+          ls -la "$API_DIR"
         shell: bash
 
-      - name: Create .htaccess for API security
+      - name: Deploy Backoffice (public/backoffice/)
         run: |
-          HTACCESS_DIR="${{ github.workspace }}/dist/public/backoffice/api"
-          mkdir -p "$HTACCESS_DIR" # Assurer que le répertoire existe
-          echo "<Files env.php>" > "$HTACCESS_DIR/.htaccess"
-          echo "    Require all denied" >> "$HTACCESS_DIR/.htaccess"
-          echo "</Files>" >> "$HTACCESS_DIR/.htaccess"
-          echo "<Files config.php>" >> "$HTACCESS_DIR/.htaccess" # S'assurer que cette règle est bien ajoutée au même .htaccess
-          echo "    Require all denied" >> "$HTACCESS_DIR/.htaccess"
-          echo "</Files>" >> "$HTACCESS_DIR/.htaccess"
+          echo "--- Attempting to deploy backoffice ---"
+          # Create the target directory structure on the server first for public/backoffice
+          # This ensures the parent path exists before rsyncing into it.
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_SERVER" "mkdir -p $DEPLOY_PATH/public/backoffice"
+          
+          # Deploy the entire public/backoffice directory. 
+          # This will now include the env.php and .htaccess created in the previous step.
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" "${{ github.workspace }}/public/backoffice/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/public/backoffice/"
         shell: bash
-
-      - name: Deploy to Server
-        uses: SamKirkland/FTP-Deploy-Action@4.3.3
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: www/develop/ # Target directory on the server
-          local-dir: ./dist/ # Source directory from the runner
-          # ... (gardez vos exclusions si nécessaire)
