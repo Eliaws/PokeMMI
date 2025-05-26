@@ -120,7 +120,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download frontend build artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: pokemmi-frontend-build
           path: dist # Download to a 'dist' subfolder
