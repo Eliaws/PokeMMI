@@ -1,14 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Inject header
-  const headerContainer = document.getElementById('header');
-  fetch('./includes/header.html')
-    .then(res => res.text())
-    .then(html => { headerContainer.innerHTML = html });
-
   const form = document.getElementById('upload-form');
+  const versionSelect = document.getElementById('version-select');
+  const messageBanner = document.getElementById('message-banner'); // Get the banner element
 
-  // Remplir la liste déroulante
-  const getVersionForNameCopy = {
+  // Function to display messages in the banner
+  function showMessage(message, isSuccess) {
+    messageBanner.innerHTML = ''; // Clear previous messages
+    const messageDiv = document.createElement('div');
+    messageDiv.textContent = message;
+    messageDiv.className = `p-4 rounded-md ${isSuccess ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+    messageBanner.appendChild(messageDiv);
+    // Optionally, clear the message after some time
+    setTimeout(() => {
+        messageBanner.innerHTML = '';
+    }, 5000); // Clears after 5 seconds
+  }
+
+  // Populate the select dropdown (game versions)
+  const gameVersions = {
     red: "Pokémon Rouge",
     blue: "Pokémon Bleue",
     yellow: "Pokémon Jaune",
@@ -44,34 +53,57 @@ document.addEventListener('DOMContentLoaded', () => {
     "lets-go-eevee": "Pokémon Let's Go, Évoli",
     "lets-go-pikachu": "Pokémon Let's Go, Pikachu",
     "legends-arceus": "Légendes Pokémon : Arceus",
-};
+  };
 
-  
-  const versionSelect = document.getElementById('version-select');
-  Object.entries(getVersionForNameCopy).forEach(([value,label]) => {
+  Object.entries(gameVersions).forEach(([value, label]) => {
     const opt = document.createElement('option');
     opt.value = value;
     opt.textContent = label;
-    versionSelect.append(opt);
+    versionSelect.appendChild(opt);
   });
 
+  // Handle form submission
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    messageBanner.innerHTML = ''; // Clear banner on new submission
 
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
     const formData = new FormData(form);
-    const response = await fetch('api/upload.php', { // Changed to .php
+
+    // Basic client-side validation (optional, good practice)
+    const fileInput = form.querySelector('input[type="file"]');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        showMessage('Veuillez sélectionner un fichier.', false);
+        return;
+    }
+    if (!versionSelect.value) {
+        showMessage('Veuillez sélectionner un jeu.', false);
+        return;
+    }
+
+    fetch('api/upload.php', {
       method: 'POST',
       body: formData,
+    })
+    .then(response => {
+      if (!response.ok) {
+        // If server response is not OK (e.g., 500 error), try to get text error or throw generic
+        return response.text().then(text => {
+            throw new Error(`Erreur serveur: ${response.status} ${response.statusText}. Détails: ${text}`);
+        });
+      }
+      return response.json(); // Expect JSON response from PHP
+    })
+    .then(data => {
+      if (data.success) {
+        showMessage(data.message || 'Upload réussi !', true);
+        form.reset();
+      } else {
+        showMessage(data.message || 'Une erreur est survenue lors de l\'upload.', false);
+      }
+    })
+    .catch(error => {
+      console.error('Fetch Error:', error);
+      showMessage(`Erreur de communication avec le serveur: ${error.message}`, false);
     });
-    // const result = await response.text(); // Original line
-    const result = await response.json(); // Expect JSON response
-    // alert(result); // Original line
-    if (result.success) {
-      alert(result.message);
-      form.reset(); // Reset form on success
-    } else {
-      alert('Error: ' + result.message);
-    }
   });
 });
