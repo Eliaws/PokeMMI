@@ -6,18 +6,23 @@ $env_php_path = __DIR__ . '/env.php';
 $env_php_exists_check_for_inclusion = file_exists($env_php_path);
 $env_php_readable_check_for_inclusion = is_readable($env_php_path);
 
+// Initialize variables to null or default values
+$DB_HOST = null;
+$DB_USER = null;
+$DB_PASS = null;
+$DB_NAME = null;
+
 // Load environment variables from env.php if it exists
 if ($env_php_exists_check_for_inclusion) {
-    require_once $env_php_path;
+    require_once $env_php_path; // This will define $DB_HOST, $DB_USER, etc.
 }
 
-$db_host = getenv('DB_HOST');
-$db_user = getenv('DB_USER');
-$db_pass = getenv('DB_PASS');
-$db_name = getenv('DB_NAME');
+// Use the variables directly (they should be defined by env.php)
+// $db_host, $db_user, $db_pass, $db_name are now expected to be set by the included env.php
 
 // Early exit for debugging if DB_HOST is not set
-if (empty($db_host)) {
+// Check if the global variables from env.php are set and not empty
+if (empty($DB_HOST)) { // Use the variable $DB_HOST directly
     // Attempt to set a more specific content type if headers haven't been sent
     if (!headers_sent()) {
         header('Content-Type: application/json');
@@ -27,10 +32,11 @@ if (empty($db_host)) {
         "env_php_path_checked" => $env_php_path,
         "env_php_exists_when_checked_for_inclusion" => $env_php_exists_check_for_inclusion ? 'yes' : 'no',
         "env_php_readable_when_checked_for_inclusion" => $env_php_readable_check_for_inclusion ? 'yes' : 'no',
-        "db_host_retrieved" => $db_host ?: false, // getenv returns false if not found
-        "db_user_retrieved" => getenv('DB_USER') ?: false,
-        "db_pass_retrieved_status" => getenv('DB_PASS') ? 'set' : 'not_set', // Avoid logging actual password
-        "db_name_retrieved" => getenv('DB_NAME') ?: false,
+        // Check the global variables directly
+        "db_host_variable_set_and_not_empty" => !empty($DB_HOST),
+        "db_user_variable_set_and_not_empty" => !empty($DB_USER),
+        "db_pass_variable_set_status" => isset($DB_PASS) ? 'set' : 'not_set', // Avoid logging actual password
+        "db_name_variable_set_and_not_empty" => !empty($DB_NAME),
         "open_basedir_config" => ini_get('open_basedir') ?: 'not_set_or_empty',
         "api_directory_listing" => scandir(__DIR__) ?: 'scandir_failed_or_empty',
         "php_script_user" => get_current_user(),
@@ -46,13 +52,14 @@ if (empty($db_host)) {
     // Output JSON and exit
     echo json_encode([
         "success" => false, 
-        "message" => "Configuration error: DB_HOST is not set. env.php might not be loaded or readable, or variables are missing.",
+        "message" => "Configuration error: DB_HOST is not set. env.php might not be loaded or variables are missing.",
         "debug_info" => $debug_payload
     ]);
     exit;
 }
 
-$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+// Use the global variables for the connection
+$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
