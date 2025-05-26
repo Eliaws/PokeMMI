@@ -194,31 +194,32 @@ jobs:
         run: |
           echo "--- Performing server-side PHP check for env.php ---"
           # Define CHECK_SCRIPT_CONTENT using a here document for robustness
-          read -r -d \'\'\'\' CHECK_SCRIPT_CONTENT <<\'EOF_PHP_SCRIPT\'
+          CHECK_SCRIPT_CONTENT=$(cat <<\'EOF_PHP_SCRIPT\'
           <?php
           $api_dir = __DIR__;
-          $env_file_path = $api_dir . \'/env.php\';
-          $config_file_path = $api_dir . \'/config.php\';
+          $env_file_path = $api_dir . \\\'/env.php\\\';
+          $config_file_path = $api_dir . \\\'/config.php\\\';
           $output = [
-              \'check_script_location\' => __FILE__,
-              \'api_dir_checked\' => $api_dir,
-              \'env_php_path_checked\' => $env_file_path,
-              \'env_php_exists\' => file_exists($env_file_path),
-              \'env_php_is_readable\' => is_readable($env_file_path),
-              \'env_php_owner\' => file_exists($env_file_path) ? fileowner($env_file_path) : \'n/a\',
-              \'env_php_perms\' => file_exists($env_file_path) ? substr(sprintf(\'%o\', fileperms($env_file_path)), -4) : \'n/a\',
-              \'config_php_exists\' => file_exists($config_file_path),
-              \'config_php_is_readable\' => is_readable($config_file_path),
-              \'api_directory_listing_from_check_script\' => scandir($api_dir),
-              \'php_current_user_id\' => getmyuid(),
-              \'php_current_user_name\' => get_current_user(),
-              \'php_version\' => PHP_VERSION,
-              \'open_basedir\' => ini_get(\'open_basedir\') ?: \'not_set_or_empty\',
+              \\\'check_script_location\\\' => __FILE__,
+              \\\'api_dir_checked\\\' => $api_dir,
+              \\\'env_php_path_checked\\\' => $env_file_path,
+              \\\'env_php_exists\\\' => file_exists($env_file_path),
+              \\\'env_php_is_readable\\\' => is_readable($env_file_path),
+              \\\'env_php_owner\\\' => file_exists($env_file_path) ? fileowner($env_file_path) : \\\'n/a\\\',
+              \\\'env_php_perms\\\' => file_exists($env_file_path) ? substr(sprintf(\\\'%o\\\', fileperms($env_file_path)), -4) : \\\'n/a\\\',
+              \\\'config_php_exists\\\' => file_exists($config_file_path),
+              \\\'config_php_is_readable\\\' => is_readable($config_file_path),
+              \\\'api_directory_listing_from_check_script\\\' => scandir($api_dir),
+              \\\'php_current_user_id\\\' => getmyuid(),
+              \\\'php_current_user_name\\\' => get_current_user(),
+              \\\'php_version\\\' => PHP_VERSION,
+              \\\'open_basedir\\\' => ini_get(\\\'open_basedir\\\') ?: \\\'not_set_or_empty\\\',
           ];
-          header(\'Content-Type: application/json\');
+          header(\\\'Content-Type: application/json\\\');
           echo json_encode($output, JSON_PRETTY_PRINT);
           ?>
           EOF_PHP_SCRIPT
+          )
 
           # Create the check script locally on the runner
           echo "$CHECK_SCRIPT_CONTENT" > "${{ github.workspace }}/check_env.php"
