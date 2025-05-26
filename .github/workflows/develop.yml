@@ -114,10 +114,10 @@ jobs:
     needs: build # Assurez-vous que ce job s'exécute après le job de build
     runs-on: ubuntu-latest
     env: # Définissez vos variables d'environnement ici, en utilisant des secrets
-      SSH_PWD: ${{ secrets.YOUR_SSH_PASSWORD_SECRET }} # Remplacez par le nom de votre secret
-      SSH_USER: ${{ secrets.YOUR_SSH_USER_SECRET }}   # Remplacez par le nom de votre secret
-      SSH_SERVER: ${{ secrets.YOUR_SSH_SERVER_SECRET }} # Remplacez par le nom de votre secret
-      DEPLOY_PATH: ${{ secrets.YOUR_DEPLOY_PATH_SECRET }} # Remplacez par le nom de votre secret
+      SSH_PWD: ${{ secrets.SSH_PWD }} # Réactivé pour l'authentification par mot de passe
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_SERVER: ${{ secrets.SSH_SERVER }}
+      # DEPLOY_PATH n'est plus utilisé ici
       # DB_HOST, DB_USER, DB_PASS, DB_NAME sont aussi nécessaires pour env.php
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_USER: ${{ secrets.DB_USER }}
@@ -134,19 +134,27 @@ jobs:
           name: pokemmi-frontend-build # Doit correspondre au nom de l'artefact téléversé
           path: dist # L'artefact sera téléchargé dans ./dist/
 
+      - name: Verify SSH Connection Variables
+        run: |
+          echo "Attempting to use the following SSH connection details:"
+          echo "SSH User (from env): $SSH_USER"
+          echo "SSH Server (from env): $SSH_SERVER"
+          # DO NOT ECHO SSH_PWD or any other sensitive password/token
+        shell: bash
+
       - name: Deploy Frontend (dist/)
         run: |
           echo "--- Deploying frontend from dist/ ---"
-          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" "${{ github.workspace }}/dist/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/"
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30" "${{ github.workspace }}/dist/" "$SSH_USER@$SSH_SERVER:www/develop/"
         shell: bash
 
       - name: Create env.php and .htaccess for Backoffice
         run: |
           API_DIR="${{ github.workspace }}/public/backoffice/api"
-          echo "Ensuring API directory exists at $API_DIR"
+          echo "Ensuring API directory exists at $API_DIR on runner"
           mkdir -p "$API_DIR"
 
-          echo "Creating env.php in $API_DIR"
+          echo "Creating env.php in $API_DIR on runner"
           echo "<?php" > "$API_DIR/env.php"
           echo "putenv('DB_HOST=$DB_HOST');" >> "$API_DIR/env.php"
           echo "putenv('DB_USER=$DB_USER');" >> "$API_DIR/env.php"
@@ -154,7 +162,7 @@ jobs:
           echo "putenv('DB_NAME=$DB_NAME');" >> "$API_DIR/env.php"
           echo "?>" >> "$API_DIR/env.php"
 
-          echo "Creating .htaccess in $API_DIR"
+          echo "Creating .htaccess in $API_DIR on runner"
           echo "<Files env.php>" > "$API_DIR/.htaccess"
           echo "    Require all denied" >> "$API_DIR/.htaccess"
           echo "</Files>" >> "$API_DIR/.htaccess"
@@ -166,14 +174,16 @@ jobs:
           ls -la "$API_DIR"
         shell: bash
 
+      - name: Create remote directory for Backoffice
+        run: |
+          echo "--- Creating remote directory for backoffice ---"
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_USER@$SSH_SERVER" "mkdir -p www/develop/public/backoffice"
+        shell: bash
+
+      # L'étape "Verify SSH Connection Variables before Backoffice Deploy" a été supprimée car redondante.
+
       - name: Deploy Backoffice (public/backoffice/)
         run: |
           echo "--- Attempting to deploy backoffice ---"
-          # Create the target directory structure on the server first for public/backoffice
-          # This ensures the parent path exists before rsyncing into it.
-          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_SERVER" "mkdir -p $DEPLOY_PATH/public/backoffice"
-          
-          # Deploy the entire public/backoffice directory. 
-          # This will now include the env.php and .htaccess created in the previous step.
-          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" "${{ github.workspace }}/public/backoffice/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/public/backoffice/"
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30" "${{ github.workspace }}/public/backoffice/" "$SSH_USER@$SSH_SERVER:www/develop/public/backoffice/"
         shell: bash
