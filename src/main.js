@@ -268,10 +268,23 @@ const loadPokedexForGeneration = async (generation = 1, triggerElement) => {
 
             imgTag.alt = `sprite de ${item.name.fr}`;
             imgTag.fetchPriority =
-                index <= fetchPriorityHighThreshold ? "high" : "low";
-
-            const pkmnNameContainer = clone.querySelector("[data-pkmn-name]")
+                index <= fetchPriorityHighThreshold ? "high" : "low";            const pkmnNameContainer = clone.querySelector("[data-pkmn-name]")
             pkmnNameContainer.textContent = `#${String(item.pokedex_id).padStart(NB_NUMBER_INTEGERS_PKMN_ID, '0')}\n${item.name.fr}`;
+
+            // Créer les badges de types pour le mode liste
+            const typesContainer = clone.querySelector("[data-pkmn-types]");
+            item.types.forEach((type, idx) => {
+                const typeElement = document.createElement("span");
+                typeElement.textContent = type.name;
+                typeElement.setAttribute("aria-label", `Type ${idx + 1} ${type.name}`);
+                typeElement.classList.add(
+                    "py-0.5", "px-2", "rounded-md", "type-name", "text-sm", "font-medium"
+                );
+                typeElement.style.backgroundColor = `var(--type-${cleanString(type.name)})`;
+                typeElement.style.color = "white";
+                
+                typesContainer.appendChild(typeElement);
+            });
 
             const aTag = clone.querySelector("[data-pokemon-data]");
             aTag.href = url;
