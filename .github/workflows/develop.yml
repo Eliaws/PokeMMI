@@ -163,15 +163,12 @@ jobs:
           echo "?>" >> "$API_DIR/env.php"
 
           echo "Creating .htaccess in $API_DIR on runner"
-          # Temporarily comment out the restriction for env.php to test if it interferes with PHP include
-          # echo "<Files env.php>" > "$API_DIR/.htaccess"
-          # echo "    Require all denied" >> "$API_DIR/.htaccess"
-          # echo "</Files>" >> "$API_DIR/.htaccess"
-          # echo "" >> "$API_DIR/.htaccess" # Add a newline if both blocks were active
-
-          # Keep restriction for config.php
-          # If env.php block was removed, .htaccess will be created/overwritten starting with this:
-          echo "<Files config.php>" > "$API_DIR/.htaccess" 
+          # Restore .htaccess rules for env.php and config.php
+          echo "<Files env.php>" > "$API_DIR/.htaccess"
+          echo "    Require all denied" >> "$API_DIR/.htaccess"
+          echo "</Files>" >> "$API_DIR/.htaccess"
+          echo "" >> "$API_DIR/.htaccess" # Add a newline
+          echo "<Files config.php>" >> "$API_DIR/.htaccess" 
           echo "    Require all denied" >> "$API_DIR/.htaccess"
           echo "</Files>" >> "$API_DIR/.htaccess"
 
@@ -191,4 +188,53 @@ jobs:
         run: |
           echo "--- Attempting to deploy backoffice ---"
           sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30" "${{ github.workspace }}/public/backoffice/" "$SSH_USER@$SSH_SERVER:www/develop/public/backoffice/"
+        shell: bash
+
+      - name: Server-Side PHP Check for env.php
+        run: |
+          echo "--- Performing server-side PHP check for env.php ---"
+          CHECK_SCRIPT_CONTENT='<?php \
+          $api_dir = __DIR__; \
+          $env_file_path = $api_dir . \'/env.php\'; \
+          $config_file_path = $api_dir . \'/config.php\'; \
+          $output = [ \
+              \'check_script_location\' => __FILE__, \
+              \'api_dir_checked\' => $api_dir, \
+              \'env_php_path_checked\' => $env_file_path, \
+              \'env_php_exists\' => file_exists($env_file_path), \
+              \'env_php_is_readable\' => is_readable($env_file_path), \
+              \'env_php_owner\' => file_exists($env_file_path) ? fileowner($env_file_path) : \'n/a\', \
+              \'env_php_perms\' => file_exists($env_file_path) ? substr(sprintf(\'%o\', fileperms($env_file_path)), -4) : \'n/a\', \
+              \'config_php_exists\' => file_exists($config_file_path), \
+              \'config_php_is_readable\' => is_readable($config_file_path), \
+              \'api_directory_listing_from_check_script\' => scandir($api_dir), \
+              \'php_current_user_id\' => getmyuid(), \
+              \'php_current_user_name\' => get_current_user(), \
+              \'php_version\' => PHP_VERSION, \
+              \'open_basedir\' => ini_get(\'open_basedir\') ?: \'not_set_or_empty\', \
+          ]; \
+          header(\'Content-Type: application/json\'); \
+          echo json_encode($output, JSON_PRETTY_PRINT); ?>'
+
+          # Create the check script locally on the runner
+          echo "$CHECK_SCRIPT_CONTENT" > "${{ github.workspace }}/check_env.php"
+          echo "Local check_env.php created."
+          ls -la "${{ github.workspace }}/check_env.php"
+
+          # Define remote path for the script
+          REMOTE_SCRIPT_PATH="www/develop/public/backoffice/api/check_env.php"
+
+          # Upload the check script to the server
+          echo "Uploading check_env.php to $SSH_USER@$SSH_SERVER:$REMOTE_SCRIPT_PATH"
+          sshpass -p "$SSH_PWD" rsync -Pavz -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30" "${{ github.workspace }}/check_env.php" "$SSH_USER@$SSH_SERVER:$REMOTE_SCRIPT_PATH"
+          echo "Upload complete."
+
+          # Execute the check script on the server
+          echo "Executing $REMOTE_SCRIPT_PATH on server:"
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_USER@$SSH_SERVER" "php $REMOTE_SCRIPT_PATH" 
+
+          # Clean up the check script from the server
+          echo "Cleaning up $REMOTE_SCRIPT_PATH from server."
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_USER@$SSH_SERVER" "rm -f $REMOTE_SCRIPT_PATH"
+          echo "Cleanup complete."
         shell: bash
