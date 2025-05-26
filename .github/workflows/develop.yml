@@ -116,43 +116,57 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Download artifacts
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Download front-end build artifact
         uses: actions/download-artifact@master
         with:
           name: front-end-build
-          # Note: The artifact is downloaded into the current GITHUB_WORKSPACE, 
-          # which might be just 'dist'. We need to ensure the PHP files from public/backoffice/api 
-          # are also available or deployed separately if not part of the 'dist' artifact.
-          # For this example, we assume 'dist' contains the whole frontend and backoffice PHP files are deployed with it.
+          path: ${{ github.workspace }}/dist # Download artifact into a 'dist' subfolder
 
-      - name: Create env.php for database connection
+      - name: Create env.php and .htaccess for API
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
-          echo "<?php" > ${{ github.workspace }}/public/backoffice/api/env.php
-          echo "putenv('DB_HOST=${DB_HOST}');" >> ${{ github.workspace }}/public/backoffice/api/env.php
-          echo "putenv('DB_USER=${DB_USER}');" >> ${{ github.workspace }}/public/backoffice/api/env.php
-          echo "putenv('DB_PASS=${DB_PASS}');" >> ${{ github.workspace }}/public/backoffice/api/env.php
-          echo "putenv('DB_NAME=${DB_NAME}');" >> ${{ github.workspace }}/public/backoffice/api/env.php
-          echo "?>" >> ${{ github.workspace }}/public/backoffice/api/env.php
-          # Ensure the .htaccess file is present in the api directory
-          echo "<Files \"env.php\">" > ${{ github.workspace }}/public/backoffice/api/.htaccess
-          echo "    Require all denied" >> ${{ github.workspace }}/public/backoffice/api/.htaccess
-          echo "</Files>" >> ${{ github.workspace }}/public/backoffice/api/.htaccess
-          echo "<Files \"config.php\">" >> ${{ github.workspace }}/public/backoffice/api/.htaccess
-          echo "    Require all denied" >> ${{ github.workspace }}/public/backoffice/api/.htaccess
+          API_DIR="${{ github.workspace }}/public/backoffice/api"
+          mkdir -p "$API_DIR"
+
+          echo "<?php" > "$API_DIR/env.php"
+          echo "putenv('DB_HOST=${DB_HOST}');" >> "$API_DIR/env.php"
+          echo "putenv('DB_USER=${DB_USER}');" >> "$API_DIR/env.php"
+          echo "putenv('DB_PASS=${DB_PASS}');" >> "$API_DIR/env.php"
+          echo "putenv('DB_NAME=${DB_NAME}');" >> "$API_DIR/env.php"
+          echo "?>" >> "$API_DIR/env.php"
+
+          echo "<Files \\"env.php\\">" > "$API_DIR/.htaccess"
+          echo "    Require all denied" >> "$API_DIR/.htaccess"
+          echo "</Files>" >> "$API_DIR/.htaccess"
+          echo "" >> "$API_DIR/.htaccess"
+          echo "<Files \\"config.php\\">" >> "$API_DIR/.htaccess"
+          echo "    Require all denied" >> "$API_DIR/.htaccess"
+          echo "</Files>" >> "$API_DIR/.htaccess"
 
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
-      - name: Deploy via ssh password
+
+      - name: Deploy to server
         env:
           SSH_PWD: ${{ secrets.SSH_PWD }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_SERVER: ${{ secrets.SSH_SERVER }}
-
+          DEPLOY_PATH: "~/www/${{ github.ref_name }}"
         run: |
-          sshpass -p "$SSH_PWD" rsync -Pavz -e "ssh -o StrictHostKeyChecking=no" \
-          "${{ github.workspace }}/" "$SSH_USER@$SSH_SERVER:~/www/${{ github.ref_name }}/"
+          # Deploy built frontend (from dist/) to the root of DEPLOY_PATH
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" \\
+            "${{ github.workspace }}/dist/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/"
+
+          # Deploy the entire public/backoffice directory (which includes api/ with generated env.php & .htaccess, and uploads/)
+          # This assumes the server expects PHP files under $DEPLOY_PATH/public/backoffice/
+          # Create the target directory structure on the server first for public/backoffice
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_SERVER" "mkdir -p $DEPLOY_PATH/public/backoffice"
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" \\
+            "${{ github.workspace }}/public/backoffice/" "$SSH_USER@$SSH_SERVER:$DEPLOY_PATH/public/backoffice/"
