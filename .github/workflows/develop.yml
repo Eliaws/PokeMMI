@@ -120,6 +120,31 @@ jobs:
         uses: actions/download-artifact@master
         with:
           name: front-end-build
+          # Note: The artifact is downloaded into the current GITHUB_WORKSPACE, 
+          # which might be just 'dist'. We need to ensure the PHP files from public/backoffice/api 
+          # are also available or deployed separately if not part of the 'dist' artifact.
+          # For this example, we assume 'dist' contains the whole frontend and backoffice PHP files are deployed with it.
+
+      - name: Create env.php for database connection
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: |
+          echo "<?php" > ${{ github.workspace }}/public/backoffice/api/env.php
+          echo "putenv('DB_HOST=${DB_HOST}');" >> ${{ github.workspace }}/public/backoffice/api/env.php
+          echo "putenv('DB_USER=${DB_USER}');" >> ${{ github.workspace }}/public/backoffice/api/env.php
+          echo "putenv('DB_PASS=${DB_PASS}');" >> ${{ github.workspace }}/public/backoffice/api/env.php
+          echo "putenv('DB_NAME=${DB_NAME}');" >> ${{ github.workspace }}/public/backoffice/api/env.php
+          echo "?>" >> ${{ github.workspace }}/public/backoffice/api/env.php
+          # Ensure the .htaccess file is present in the api directory
+          echo "<Files \"env.php\">" > ${{ github.workspace }}/public/backoffice/api/.htaccess
+          echo "    Require all denied" >> ${{ github.workspace }}/public/backoffice/api/.htaccess
+          echo "</Files>" >> ${{ github.workspace }}/public/backoffice/api/.htaccess
+          echo "<Files \"config.php\">" >> ${{ github.workspace }}/public/backoffice/api/.htaccess
+          echo "    Require all denied" >> ${{ github.workspace }}/public/backoffice/api/.htaccess
+
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
       - name: Deploy via ssh password

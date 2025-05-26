@@ -60,11 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(form);
-    const response = await fetch('api/upload', {
+    const response = await fetch('api/upload.php', { // Changed to .php
       method: 'POST',
       body: formData,
     });
-    const result = await response.text();
-    alert(result);
+    // const result = await response.text(); // Original line
+    const result = await response.json(); // Expect JSON response
+    // alert(result); // Original line
+    if (result.success) {
+      alert(result.message);
+      form.reset(); // Reset form on success
+    } else {
+      alert('Error: ' + result.message);
+    }
   });
 });

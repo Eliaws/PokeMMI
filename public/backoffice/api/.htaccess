@@ -1,0 +1,7 @@
+# filepath: c:\Users\eliax\Desktop\repo_github\PokeMMI\public\backoffice\api\.htaccess
+<Files "env.php">
+    Require all denied
+</Files>
+<Files "config.php">
+    Require all denied
+</Files>
