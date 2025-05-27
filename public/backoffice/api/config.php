@@ -12,6 +12,7 @@ $debug_env_info = [
     "env_file_path_realpath_resolved" => $env_file_path_absolute ?: 'realpath_failed_or_file_does_not_exist',
     "php_version" => phpversion(),
     "__DIR__" => __DIR__,
+    "ini_get_open_basedir" => ini_get('open_basedir'), // Added open_basedir check
     "file_exists_on_original_string" => file_exists($env_file_path_relative) ? 'yes' : 'no',
     "is_readable_on_original_string" => is_readable($env_file_path_relative) ? 'yes' : 'no_or_does_not_exist',
 ];
