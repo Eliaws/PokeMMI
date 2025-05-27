@@ -767,7 +767,7 @@ displayModal = async (pkmnData) => {
 
         if (coverPath) {
             const img = document.createElement('img');
-            img.src = coverPath; // Path is relative from index.html, e.g., "backoffice/uploads/red.png"
+            img.src = '/' + coverPath; // chemin relatif à la racine
             img.alt = `Jaquette ${versionName}`;
             // Tailwind classes for image styling
             img.classList.add('h-28', 'w-auto', 'max-w-full', 'object-contain', 'mb-1', 'rounded', 'shadow-md');
