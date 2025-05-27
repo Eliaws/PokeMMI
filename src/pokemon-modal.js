@@ -733,15 +733,20 @@ displayModal = async (pkmnData) => {
         modal_DOM.spritesContainer.append(listPokemonSpritesTemplate);
     });
 
-    // Load coverMap for jaquettes if not loaded
+    // Load coverMap for game covers if not loaded
     if (!coverMap) {
         try {
-            const res = await fetch('/api/list');
-            const list = await res.json();
-            coverMap = new Map(list.map(item => [item.version_name, item.filename]));
+            const res = await fetch('/backoffice/api/covers.php'); // Updated endpoint
+            const data = await res.json();
+            if (data.success && data.covers) {
+                coverMap = new Map(data.covers.map(cover => [cover.game_version_key, cover.image_path]));
+            } else {
+                console.error('Failed to load game covers list:', data.message || 'No message from server.');
+                coverMap = new Map(); // Ensure coverMap is a Map even on failure
+            }
         } catch (e) {
-            console.error('Failed to load jaquettes list', e);
-            coverMap = new Map();
+            console.error('Failed to fetch game covers list', e);
+            coverMap = new Map(); // Ensure coverMap is a Map even on network error
         }
     }
 
@@ -752,20 +757,35 @@ displayModal = async (pkmnData) => {
 
     listGames.forEach((item) => {
         const versionKey = item.version.name;
-        const versionName = getVersionForName[versionKey] || "Unknown";
+        const versionName = getVersionForName[versionKey] || versionKey.charAt(0).toUpperCase() + versionKey.slice(1);
+        
         const li = document.createElement("li");
-        li.classList.add('flex', 'items-center', 'gap-2', 'mb-2');
-        const filename = coverMap.get(versionKey);
-        if (filename) {
+        // Style the list item for centered flex column layout
+        li.classList.add('flex', 'flex-col', 'items-center', 'text-center', 'p-1');
+
+        const coverPath = coverMap.get(versionKey);
+
+        if (coverPath) {
             const img = document.createElement('img');
-            img.src = `/backoffice/uploads/${filename}`;
-            img.alt = versionName;
-            img.classList.add('w-8', 'h-8', 'object-contain');
+            img.src = coverPath; // Path is relative from index.html, e.g., "backoffice/uploads/red.png"
+            img.alt = `Jaquette ${versionName}`;
+            // Tailwind classes for image styling
+            img.classList.add('h-28', 'w-auto', 'max-w-full', 'object-contain', 'mb-1', 'rounded', 'shadow-md');
+            img.loading = 'lazy';
             li.append(img);
+        } else {
+            // Placeholder for missing cover
+            const placeholderDiv = document.createElement('div');
+            placeholderDiv.classList.add('w-full', 'h-28', 'bg-slate-200', 'dark:bg-slate-700', 'flex', 'items-center', 'justify-center', 'text-xs', 'text-slate-500', 'dark:text-slate-400', 'mb-1', 'rounded', 'p-2', 'text-center', 'shadow-inner');
+            placeholderDiv.textContent = "Jaquette N/A";
+            li.append(placeholderDiv);
         }
+
         const span = document.createElement('span');
         span.textContent = versionName;
+        span.classList.add('text-xs', 'sm:text-sm', 'mt-1'); // Added mt-1 for a bit more space
         li.append(span);
+        
         modal_DOM.listGames.append(li);
     });
 
