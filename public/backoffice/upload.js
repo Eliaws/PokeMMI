@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const versionSelect = document.getElementById('version-select');
   const messageBanner = document.getElementById('message-banner'); // Get the banner element
 
+  // Timeout duration for message banner (in milliseconds)
+  const MESSAGE_BANNER_TIMEOUT = 10000;
+
   // Function to display messages in the banner
   function showMessage(message, isSuccess) {
     messageBanner.innerHTML = ''; // Clear previous messages
@@ -13,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
    
     setTimeout(() => {
         messageBanner.innerHTML = '';
-    }, 10000);
+    }, MESSAGE_BANNER_TIMEOUT);
   }
 
   // Populate the select dropdown (game versions)
@@ -84,12 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
       method: 'POST',
       body: formData,
     })
-    .then(response => {
+    .then(async response => {
       if (!response.ok) {
         // If server response is not OK (e.g., 500 error), try to get text error or throw generic
-        return response.text().then(text => {
-            throw new Error(`Erreur serveur: ${response.status} ${response.statusText}. Détails: ${text}`);
-        });
+        const text = await response.text();
+        throw new Error(`Erreur serveur: ${response.status} ${response.statusText}. Détails: ${text}`);
       }
       return response.json(); // Expect JSON response from PHP
     })

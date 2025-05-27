@@ -35,20 +35,22 @@ require_once __DIR__ . '/config_utils.php';
 // Database credentials ($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME)
 // are expected to be defined by the pipeline-generated config.php that overwrites this file.
 
-// Check if essential database configuration variables are set by the pipeline
+// Check if essential database configuration variables are set by the pipeline or .env file
 if (!isset($DB_HOST) || !isset($DB_USER) || !isset($DB_PASS) || !isset($DB_NAME)) {
     if (!headers_sent()) {
         header('Content-Type: application/json');
     }
     echo json_encode([
         "success" => false,
-        "message" => "CRITICAL: Database configuration variables (DB_HOST, DB_USER, DB_PASS, DB_NAME) are not set. The CI/CD pipeline might have failed to generate config.php correctly with these variables.",
+        "message" => "CRITICAL: Database configuration variables (DB_HOST, DB_USER, DB_PASS, DB_NAME) are not set. Please check CI/CD pipeline configuration or create a .env file.",
         "debug_info" => [
-            "db_host_expected_from_pipeline" => !isset($DB_HOST) ? 'MISSING' : 'set',
-            "db_user_expected_from_pipeline" => !isset($DB_USER) ? 'MISSING' : 'set',
-            "db_pass_expected_from_pipeline" => !isset($DB_PASS) ? 'MISSING' : 'set', // Avoid logging actual password value
-            "db_name_expected_from_pipeline" => !isset($DB_NAME) ? 'MISSING' : 'set',
-            "config_utils_loaded" => (function_exists('sanitize_filename') && isset($game_versions)) ? 'yes' : 'no, or functions/vars missing',
+            "db_host_status" => !isset($DB_HOST) ? 'MISSING' : 'set',
+            "db_user_status" => !isset($DB_USER) ? 'MISSING' : 'set',
+            "db_pass_status" => !isset($DB_PASS) ? 'MISSING' : 'set',
+            "db_name_status" => !isset($DB_NAME) ? 'MISSING' : 'set',
+            "env_file_exists" => file_exists($env_file_path) ? 'yes' : 'no',
+            "env_file_path" => $env_file_path,
+            "config_utils_loaded" => (function_exists('sanitize_filename') && isset($game_versions)) ? 'yes' : 'no'
         ]
     ]);
     exit;
@@ -59,25 +61,27 @@ $conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
 
 // Check connection
 if ($conn->connect_error) {
+    // Log detailed error to server logs (PHP error log)
+    error_log("CRITICAL: Database connection failed for user '$DB_USER' to database '$DB_NAME' on host '$DB_HOST'. Error: " . $conn->connect_error);
+
+    // Send a generic JSON error response to the client
     if (!headers_sent()) {
         header('Content-Type: application/json');
-    }
-    if (function_exists('log_message')) {
-        log_message("CRITICAL: Database connection failed: " . $conn->connect_error . " (Host: $DB_HOST, User: $DB_USER)");
+        http_response_code(500); // Internal Server Error
     }
     echo json_encode([
         "success" => false,
-        "message" => "Database connection failed: " . $conn->connect_error,
-        "debug_info" => [
-            "host_used" => $DB_HOST,
-            "user_used" => $DB_USER,
-            "error_code" => $conn->connect_errno,
-            "error_message" => $conn->connect_error
-        ]
+        "message" => "Internal Server Error: Could not connect to the database. Please check server logs or contact support."
     ]);
     exit;
 }
 
-// The connection $conn is now available.
-// sanitize_filename() and $game_versions are available from config_utils.php.
+// Set character set to utf8mb4 for proper encoding support
+if (!$conn->set_charset("utf8mb4")) {
+    error_log("Error loading character set utf8mb4: " . $conn->error);
+}
+
+// The $conn object is now initialized and ready for use by scripts 
+// (e.g., upload.php, covers.php) that include this config.php.
+
 ?>
