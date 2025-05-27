@@ -736,7 +736,7 @@ displayModal = async (pkmnData) => {
     // Load coverMap for game covers if not loaded
     if (!coverMap) {
         try {
-            const res = await fetch('/backoffice/api/covers.php'); // Updated endpoint
+            const res = await fetch('backoffice/api/covers.php'); // Updated endpoint to be relative
             const data = await res.json();
             if (data.success && data.covers) {
                 coverMap = new Map(data.covers.map(cover => [cover.game_version_key, cover.image_path]));
