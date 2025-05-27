@@ -1,23 +1,34 @@
 <?php
 // Utility functions and configurations for the backoffice API
 
-// Function to sanitize filenames
-function sanitize_filename($filename) {
-    $filename = preg_replace('/[^a-zA-Z0-9_\-\s\.]/', '', $filename); // Remove special chars except _ - . and space
-    $filename = str_replace(' ', '-', $filename); // Replace spaces with hyphens
-    $filename = strtolower($filename); // Convert to lowercase
-    // Remove accents
-    $unwanted_array = [
-        'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E',
-        'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O',
-        'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U', 'Ú'=>'U', 'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss',
-        'à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e',
-        'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o',
-        'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ü'=>'u', 'ý'=>'y', 'þ'=>'b',
-        'ÿ'=>'y', 'Ŕ'=>'R', 'ŕ'=>'r'
-    ];
-    $filename = strtr($filename, $unwanted_array);
-    return $filename;
+if (!function_exists('sanitize_filename')) {
+    // Function to sanitize filenames
+    function sanitize_filename($basename) {
+        // Decode URL-encoded characters
+        $basename = urldecode($basename);
+
+        // Remove characters that are not letters (unicode), numbers, hyphens, underscores, or spaces.
+        $basename = preg_replace('/[^\pL\pN\s_-]+/u', '', $basename);
+
+        // Replace spaces and sequences of hyphens/underscores with a single hyphen
+        $basename = preg_replace('/\s+/', '-', $basename);
+        $basename = preg_replace('/[-_]+/', '-', $basename);
+
+        // Convert to lowercase
+        $basename = strtolower($basename);
+
+        // Trim hyphens from the beginning and end
+        $basename = trim($basename, '-');
+
+        // Prevent overly long filenames (e.g., 200 chars for the base name)
+        $basename = substr($basename, 0, 200);
+
+        if (empty($basename)) {
+            return 'default-filename'; // Fallback for empty results
+        }
+
+        return $basename;
+    }
 }
 
 // Game versions mapping
@@ -32,6 +43,44 @@ $game_versions = [
     "black-2" => "Pokémon Noire 2", "white-2" => "Pokémon Blanche 2",
     "x" => "Pokémon X", "y" => "Pokémon Y"
     // Add other versions if necessary
+];
+
+$game_versions_keys = [
+    'red',
+    'blue',
+    'yellow',
+    'gold',
+    'silver',
+    'crystal',
+    'sapphire',
+    'ruby',
+    'emerald',
+    'firered',
+    'leafgreen',
+    'diamond',
+    'pearl',
+    'platinum',
+    'heartgold',
+    'soulsilver',
+    'white',
+    'black',
+    'black-2',
+    'white-2',
+    'x',
+    'y',
+    'omega-ruby',
+    'ultra-sun',
+    'sun',
+    'moon',
+    'ultra-moon',
+    'alpha-sapphire',
+    'sword',
+    'shield',
+    'violet',
+    'scarlet',
+    'lets-go-eevee',
+    'lets-go-pikachu',
+    'legends-arceus'
 ];
 
 // It's a common practice to omit the closing PHP tag ?> at the end of files that only contain PHP code.

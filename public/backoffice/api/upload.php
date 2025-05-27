@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 log_message("POST request received. Proceeding with upload logic.");
 
 include 'config.php'; // config.php is now included only for POST requests
+require_once __DIR__ . '/config_utils.php';
 
 // It's good practice to set the content type header as early as possible for POST responses.
 header('Content-Type: application/json');
@@ -97,27 +98,8 @@ if (isset($_FILES['jaquette']) && isset($_POST['version'])) {
         exit;
     }
 
-
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        $upload_errors = array(
-            UPLOAD_ERR_INI_SIZE   => "The uploaded file exceeds the upload_max_filesize directive in php.ini.",
-            UPLOAD_ERR_FORM_SIZE  => "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.",
-            UPLOAD_ERR_PARTIAL    => "The uploaded file was only partially uploaded.",
-            UPLOAD_ERR_NO_FILE    => "No file was uploaded.",
-            UPLOAD_ERR_NO_TMP_DIR => "Missing a temporary folder.",
-            UPLOAD_ERR_CANT_WRITE => "Failed to write file to disk.",
-            UPLOAD_ERR_EXTENSION  => "A PHP extension stopped the file upload."
-        );
-        $error_code = $file['error'];
-        $error_message = isset($upload_errors[$error_code]) ? $upload_errors[$error_code] : "Unknown file upload error code: " . $error_code;
-        log_message("File upload error: " . $error_message);
-        echo json_encode(["success" => false, "message" => "File upload error: " . $error_message]);
-        $conn->close();
-        log_message("upload.php script finished due to file upload error.\\n---\\n");
-        exit;
-    }
-
-    if (!array_key_exists($game_version_key, $game_versions)) {
+    // Validate version against the predefined list
+    if (!in_array($game_version_key, $GLOBALS['game_versions_keys'])) {
         $error_message = "Invalid game version selected: " . htmlspecialchars($game_version_key);
         log_message($error_message);
         echo json_encode(["success" => false, "message" => $error_message]);
@@ -214,6 +196,40 @@ if (isset($_FILES['jaquette']) && isset($_POST['version'])) {
     }
     log_message("Upload directory is writable: " . $upload_dir);
 
+
+    // Validate the uploaded file
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        $upload_errors = array(
+            UPLOAD_ERR_INI_SIZE   => "The uploaded file exceeds the upload_max_filesize directive in php.ini.",
+            UPLOAD_ERR_FORM_SIZE  => "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.",
+            UPLOAD_ERR_PARTIAL    => "The uploaded file was only partially uploaded.",
+            UPLOAD_ERR_NO_FILE    => "No file was uploaded.",
+            UPLOAD_ERR_NO_TMP_DIR => "Missing a temporary folder.",
+            UPLOAD_ERR_CANT_WRITE => "Failed to write file to disk.",
+            UPLOAD_ERR_EXTENSION  => "A PHP extension stopped the file upload."
+        );
+        $error_code = $file['error'];
+        $error_message = isset($upload_errors[$error_code]) ? $upload_errors[$error_code] : "Unknown file upload error code: " . $error_code;
+        log_message("File upload error: " . $error_message);
+        echo json_encode(["success" => false, "message" => "File upload error: " . $error_message]);
+        $conn->close();
+        log_message("upload.php script finished due to file upload error.\\n---\\n");
+        exit;
+    }
+
+    // Sanitize the original filename (basename part)
+    $original_basename = pathinfo($_FILES['jaquette']['name'], PATHINFO_FILENAME);
+    $sanitized_basename = sanitize_filename($original_basename);
+    $filename = $sanitized_basename . '.' . $file_extension;
+    $upload_path = $upload_dir . '/' . $filename;
+
+    // Check if file with the same sanitized name already exists
+    if (file_exists($upload_path)) {
+        $error_message = "Un fichier avec un nom similaire existe déjà après nettoyage. Veuillez renommer.";
+        log_message("Upload Error: " . $error_message);
+        echo json_encode(['success' => false, 'message' => $error_message]);
+        exit;
+    }
 
     if (move_uploaded_file($file['tmp_name'], $upload_file_path)) {
         log_message("File moved successfully to: " . $upload_file_path);
