@@ -209,6 +209,5 @@ jobs:
       - name: Verify Backoffice Files on Server
         run: |
           echo "--- Verifying contents of www/develop/public/backoffice/ on server ---"
-          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 \\
-            "$SSH_USER@$SSH_SERVER" "echo '--- Listing public/backoffice/ ---' && ls -la www/develop/public/backoffice/ && echo '--- Content of public/backoffice/.env ---' && cat www/develop/public/backoffice/.env && echo '--- Listing public/backoffice/api/ ---' && ls -la www/develop/public/backoffice/api/ && echo '--- Content of public/backoffice/api/config.php (first 30 lines) ---' && head -n 30 www/develop/public/backoffice/api/config.php"
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_USER@$SSH_SERVER" "echo '--- Listing public/backoffice/ ---' && ls -la www/develop/public/backoffice/ && echo '--- Content of public/backoffice/.env ---' && cat www/develop/public/backoffice/.env && echo '--- Listing public/backoffice/api/ ---' && ls -la www/develop/public/backoffice/api/ && echo '--- Content of public/backoffice/api/config.php (first 30 lines) ---' && head -n 30 www/develop/public/backoffice/api/config.php"
         shell: bash
