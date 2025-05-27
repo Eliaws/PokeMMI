@@ -3,6 +3,19 @@
 // The pipeline should define $DB_HOST, $DB_USER, $DB_PASS, $DB_NAME directly
 // and ensure config_utils.php is present.
 
+// Alternative: Try to load from .env file if pipeline variables are not set
+$env_file_path = __DIR__ . '/../.env';
+if (!isset($DB_HOST) && file_exists($env_file_path)) {
+    // Load .env file using parse_ini_file() as fallback
+    $env = parse_ini_file($env_file_path);
+    if ($env !== false) {
+        $DB_HOST = $env['VITE_DB_HOST'] ?? null;
+        $DB_USER = $env['VITE_DB_USER'] ?? null;
+        $DB_PASS = $env['VITE_DB_PASS'] ?? null;
+        $DB_NAME = $env['VITE_DB_NAME'] ?? null;
+    }
+}
+
 // The pipeline is responsible for ensuring config_utils.php is present.
 if (!file_exists(__DIR__ . '/config_utils.php')) {
     if (!headers_sent()) {

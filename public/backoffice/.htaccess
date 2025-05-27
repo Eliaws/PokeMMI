@@ -1,0 +1,7 @@
+# Protect environment files in backoffice directory
+<Files ".env">
+    Require all denied
+</Files>
+<Files "env.php">
+    Require all denied
+</Files>
