@@ -738,16 +738,21 @@ displayModal = async (pkmnData) => {
         try {
             const res = await fetch(import.meta.env.BASE_URL + 'backoffice/api/covers.php');
             const data = await res.json();
+            console.log('Data from covers.php:', data); // LOG AJOUTÉ
             if (data.success && data.covers) {
+                // LOG AJOUTÉ pour vérifier chaque cover avant de mapper
+                data.covers.forEach(cover => {
+                    console.log(`Cover item from PHP: key='${cover.game_version_key}', path='${cover.image_path}'`);
+                });
                 coverMap = new Map(data.covers.map(cover => [cover.game_version_key, cover.image_path]));
                 console.log('Cover map loaded:', coverMap); // Debug log
             } else {
                 console.error('Failed to load game covers list:', data.message || 'No message from server.');
-                coverMap = new Map();
+                coverMap = new Map(); // Initialize as empty map on failure
             }
         } catch (e) {
             console.error('Failed to fetch game covers list', e);
-            coverMap = new Map();
+            coverMap = new Map(); // Initialize as empty map on error
         }
     }
 
@@ -757,20 +762,25 @@ displayModal = async (pkmnData) => {
         .filter((value, index, self) => self.findIndex(v => v.version?.name === value.version?.name) === index);
 
     listGames.forEach((item) => {
-        const versionKey = item.version.name;
+        const versionKey = item.version.name; // Cette clé doit correspondre à game_version_key
         const versionName = getVersionForName[versionKey] || versionKey.charAt(0).toUpperCase() + versionKey.slice(1);
         
         const li = document.createElement("li");
         li.classList.add('flex', 'flex-col', 'items-center', 'text-center', 'p-1');
-
+        
         const pathFromDb = coverMap.get(versionKey);
-        console.log(`Looking for cover for version: ${versionKey}, found: ${pathFromDb}`); // Debug log
+        // LOG MODIFIÉ/AJOUTÉ pour plus de clarté
+        console.log(`Attempting to get cover for API versionKey='${versionKey}'. Path from map: '${pathFromDb}'`); 
 
         if (pathFromDb) {
             const img = document.createElement('img');
-            // Construire le chemin final : BASE_URL + backoffice/ + pathFromDb
-            const finalCoverPath = import.meta.env.BASE_URL + 'backoffice/' + pathFromDb;
-            console.log(`Final cover path: ${finalCoverPath}`); // Debug log
+            // pathFromDb devrait être "uploads/filename.ext"
+            // BASE_URL se termine généralement par "/"
+            let finalCoverPath = import.meta.env.BASE_URL + 'backoffice/' + pathFromDb;
+            // S'assurer qu'il n'y a pas de double slash, par ex. si BASE_URL est juste "/" et pathFromDb commencerait par "/" (ne devrait pas)
+            finalCoverPath = finalCoverPath.replace(/([^:]\/)\/\/+/g, "$1"); // Corrige http://host//path en http://host/path
+
+            console.log(`Final cover path for '${versionKey}': ${finalCoverPath}`); // Debug log
             img.src = finalCoverPath;
             img.alt = `Jaquette ${versionName}`;
             img.classList.add('h-28', 'w-auto', 'max-w-full', 'object-contain', 'mb-1', 'rounded', 'shadow-md');

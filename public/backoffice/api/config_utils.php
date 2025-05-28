@@ -41,7 +41,14 @@ $game_versions = [
     "heartgold" => "Pokémon Or HeartGold", "soulsilver" => "Pokémon Argent SoulSilver",
     "white" => "Pokémon Blanche", "black" => "Pokémon Noire",
     "black-2" => "Pokémon Noire 2", "white-2" => "Pokémon Blanche 2",
-    "x" => "Pokémon X", "y" => "Pokémon Y"
+    "x" => "Pokémon X", "y" => "Pokémon Y",
+    "omega-ruby" => "Pokémon Rubis Oméga", "alpha-sapphire" => "Pokémon Saphir Alpha",
+    "sun" => "Pokémon Soleil", "moon" => "Pokémon Lune",
+    "ultra-sun" => "Pokémon Ultra-Soleil", "ultra-moon" => "Pokémon Ultra-Lune",
+    "lets-go-pikachu" => "Pokémon Let's Go, Pikachu", "lets-go-eevee" => "Pokémon Let's Go, Évoli",
+    "sword" => "Pokémon Épée", "shield" => "Pokémon Bouclier",
+    "legends-arceus" => "Légendes Pokémon : Arceus", "scarlet" => "Pokémon Écarlate",
+    "violet" => "Pokémon Violet"
     // Add other versions if necessary
 ];
 
@@ -81,6 +88,46 @@ $game_versions_keys = [
     'lets-go-eevee',
     'lets-go-pikachu',
     'legends-arceus'
+];
+
+// Map of game version keys to full names
+// This should correspond to what is used in upload.js
+$game_versions = [
+    'red' => "Pokémon Rouge",
+    'blue' => "Pokémon Bleue",
+    'yellow' => "Pokémon Jaune",
+    'gold' => "Pokémon Or",
+    'silver' => "Pokémon Argent",
+    'crystal' => "Pokémon Crystal",
+    'sapphire' => "Pokémon Saphir",
+    'ruby' => "Pokémon Rubis",
+    'emerald' => "Pokémon Émeraude",
+    'firered' => "Pokémon Rouge feu",
+    'leafgreen' => "Pokémon Vert feuille",
+    'diamond' => "Pokémon Diamant",
+    'pearl' => "Pokémon Perle",
+    'platinum' => "Pokémon Platine",
+    'heartgold' => "Pokémon Or HeartGold",
+    'soulsilver' => "Pokémon Argent SoulSilver",
+    'white' => "Pokémon Blanche",
+    'black' => "Pokémon Noire",
+    'black-2' => "Pokémon Noire 2",
+    'white-2' => "Pokémon Blanche 2",
+    'x' => "Pokémon X",
+    'y' => "Pokémon Y",
+    'omega-ruby' => "Pokémon Rubis Oméga",
+    'alpha-sapphire' => "Pokémon Saphir Alpha",
+    'sun' => "Pokémon Soleil",
+    'moon' => "Pokémon Lune",
+    'ultra-sun' => "Pokémon Ultra-Soleil",
+    'ultra-moon' => "Pokémon Ultra-Lune",
+    'lets-go-pikachu' => "Pokémon Let's Go, Pikachu",
+    'lets-go-eevee' => "Pokémon Let's Go, Évoli",
+    'sword' => "Pokémon Épée",
+    'shield' => "Pokémon Bouclier",
+    'legends-arceus' => "Légendes Pokémon : Arceus",
+    'scarlet' => "Pokémon Écarlate",
+    'violet' => "Pokémon Violet"
 ];
 
 // It's a common practice to omit the closing PHP tag ?> at the end of files that only contain PHP code.

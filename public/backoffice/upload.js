@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('upload-form');
   const versionSelect = document.getElementById('version-select');
-  const messageBanner = document.getElementById('message-banner'); // Get the banner element
+  const messageBanner = document.getElementById('message-banner');
+  const submitButton = form.querySelector('button[type="submit"]'); // Get the submit button
 
   // Timeout duration for message banner (in milliseconds)
   const MESSAGE_BANNER_TIMEOUT = 10000;
@@ -70,16 +71,24 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     messageBanner.innerHTML = ''; // Clear banner on new submission
 
+    submitButton.disabled = true;
+    submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+
     const formData = new FormData(form);
 
-    // Basic client-side validation (optional, good practice)
     const fileInput = form.querySelector('input[type="file"]');
     if (!fileInput.files || fileInput.files.length === 0) {
         showMessage('Veuillez sélectionner un fichier.', false);
+
+        submitButton.disabled = false;
+        submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
         return;
     }
     if (!versionSelect.value) {
         showMessage('Veuillez sélectionner un jeu.', false);
+
+        submitButton.disabled = false;
+        submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
         return;
     }
 
@@ -106,6 +115,11 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(error => {
       console.error('Fetch Error:', error);
       showMessage(`Erreur de communication avec le serveur: ${error.message}`, false);
+    })
+    .finally(() => {
+        // Re-enable button regardless of success or failure
+        submitButton.disabled = false;
+        submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
     });
   });
 });
