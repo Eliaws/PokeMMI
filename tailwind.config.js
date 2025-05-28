@@ -99,7 +99,10 @@ const typesClassesPlugin = plugin(({ theme, addComponents }) => {
 });
 
 export default {
-    content: ["./src/**/*.{js,html}"],
+    content: [
+        "./src/**/*.{js,html}",
+        "./public/backoffice/**/*.{html,js}",
+    ],
     safelist: [],
     theme: {
         extend: {

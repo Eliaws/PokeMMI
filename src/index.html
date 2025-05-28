@@ -83,15 +83,16 @@
 
         <template data-tpl-id="marquee-type-container">
             <div class="marquee py-0.5 border-b border-solid border-white"></div>
-        </template>
-
-        <template data-tpl-id="pokemon">
-            <li class="@container/pokemon">
-                <a data-pokemon-data data-pokemon-id class="pokemon ripple-effect duration-150 border-type-animated hocus:scale-105 @xs:hocus:scale-100 hocus:relative ease-out rounded-md py-2 group block border-solid border-transparent border-2 outline-offset-2 transition-transform" data-testid="pokemon">
-                    <div class="flex @xs:flex-row flex-col gap-3 items-center relative inert:opacity-50">
-                        <div class="absolute overflow-hidden inset-0 opacity-0 transition-opacity group-hocus:opacity-100 @xs:hidden h-fit" data-marquee></div>
-                        <img src="/images/loading.svg" loading="lazy" alt="" class="@xs:max-w-20 group-hocus:scale-85 transition-transform" />
-                        <p data-pkmn-name class="group-hocus:pkmn-name @xs:text-left text-center whitespace-pre w-full"></p>
+        </template>        <template data-tpl-id="pokemon">
+            <li class="pokemon-container">
+                <a data-pokemon-data data-pokemon-id class="pokemon ripple-effect duration-150 border-type-animated hocus:scale-105 hocus:relative ease-out rounded-md py-2 group block border-solid border-transparent border-2 outline-offset-2 transition-transform" data-testid="pokemon">
+                    <div class="pokemon-content">
+                        <div class="absolute overflow-hidden inset-0 opacity-0 transition-opacity group-hocus:opacity-100 h-fit pokemon-marquee" data-marquee></div>
+                        <img src="/images/loading.svg" loading="lazy" alt="" class="pokemon-image group-hocus:scale-85 transition-transform" />
+                        <div class="pokemon-info">
+                            <p data-pkmn-name class="group-hocus:pkmn-name pokemon-name whitespace-pre"></p>
+                            <div data-pkmn-types class="pokemon-types"></div>
+                        </div>
                     </div>
                 </a>
             </li>
@@ -391,7 +392,7 @@
                         Apparitions <span data-nb-games></span>
                     </summary>
                     <ul
-                        class="columns-1 sm:columns-2 md:columns-3 list-inside list-disc"
+                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-6 pt-2"
                         data-list-games=""
                     ></ul>
                 </details>
@@ -447,7 +448,7 @@
             </div>
         </div>
         <!-- Modal À propos -->
-        <div id="apis-modal" class="hidden fixed inset-0 backdrop-blur-md bg-opacity-50 flex items-center justify-center z-50">
+        <div id="apis-modal" class="hidden fixed inset-0 backdrop-blur-md bg-opacity-50 items-center justify-center z-50">
             <div class="bg-white rounded-lg p-6 w-full max-w-lg relative border-2 border-solid border-green-400">
                 <button id="close-apis-modal" class="absolute top-2 right-2 text-xl hover:bg-gray-200">&times;</button>
                 <div class="">
@@ -472,6 +473,7 @@
                     <img src="/images/CY Cergy Paris Universite_coul.png" alt="CY Cergy Paris Universite" class="w-1/2 sm:w-1/4 h-auto object-contain" />
                     <img src="/images/CY IUT_coul.png" alt="CY IUT" class="w-1/2 sm:w-1/4 h-auto object-contain" />
                 </div>
+                <p class="text-sm text-gray-500 text-center mt-1">2024-2025</p>
             </div>
         </div>
     </body>

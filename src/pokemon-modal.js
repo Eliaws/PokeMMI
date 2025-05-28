@@ -38,6 +38,9 @@ import loadingImage from "/images/loading.svg";
 import loadingImageRaw from "/images/loading.svg?raw";
 import WaveSurfer from 'wavesurfer.js'
 
+// Carte des jaquettes chargées une seule fois
+let coverMap = null;
+
 const closeModalBtn = document.querySelector("[data-close-modal]");
 const modal = document.querySelector("[data-pokemon-modal]");
 
@@ -730,23 +733,81 @@ displayModal = async (pkmnData) => {
         modal_DOM.spritesContainer.append(listPokemonSpritesTemplate);
     });
 
-    clearTagContent(modal_DOM.listGames);
+    // Load coverMap for game covers if not loaded
+    if (!coverMap) {
+        try {
+            const res = await fetch(import.meta.env.BASE_URL + 'backoffice/api/covers.php');
+            const data = await res.json();
+            console.log('Data from covers.php:', data); // LOG AJOUTÉ
+            if (data.success && data.covers) {
+                // LOG AJOUTÉ pour vérifier chaque cover avant de mapper
+                data.covers.forEach(cover => {
+                    console.log(`Cover item from PHP: key='${cover.game_version_key}', path='${cover.image_path}'`);
+                });
+                coverMap = new Map(data.covers.map(cover => [cover.game_version_key, cover.image_path]));
+                console.log('Cover map loaded:', coverMap); // Debug log
+            } else {
+                console.error('Failed to load game covers list:', data.message || 'No message from server.');
+                coverMap = new Map(); // Initialize as empty map on failure
+            }
+        } catch (e) {
+            console.error('Failed to fetch game covers list', e);
+            coverMap = new Map(); // Initialize as empty map on error
+        }
+    }
 
-    const listGames = [...listDescriptions.flavor_text_entries, ...pkmnExtraData.game_indices].filter((value, index, self) =>
-        index === self.findIndex((t) => (
-            t.version.name === value.version.name
-        ))
-    )
-    .map((item) => ({...item, order: Object.keys(getVersionForName).findIndex((game) => item.version.name === game)}))
-    .sort((a, b) => Number(a.order) - Number(b.order));
+    clearTagContent(modal_DOM.listGames);
+    const listGames = [...listDescriptions.flavor_text_entries, ...pkmnExtraData.game_indices]
+        // Unique by version.name
+        .filter((value, index, self) => self.findIndex(v => v.version?.name === value.version?.name) === index);
 
     listGames.forEach((item) => {
+        const versionKey = item.version.name; // Cette clé doit correspondre à game_version_key
+        const versionName = getVersionForName[versionKey] || versionKey.charAt(0).toUpperCase() + versionKey.slice(1);
+        
         const li = document.createElement("li");
-        const versionName = getVersionForName[item.version.name] || "Unknown";
-        li.textContent = versionName;
+        li.classList.add('flex', 'flex-col', 'items-center', 'text-center', 'p-1');
+        
+        const pathFromDb = coverMap.get(versionKey);
+        // LOG MODIFIÉ/AJOUTÉ pour plus de clarté
+        console.log(`Attempting to get cover for API versionKey='${versionKey}'. Path from map: '${pathFromDb}'`); 
 
+        if (pathFromDb) {
+            const img = document.createElement('img');
+            // pathFromDb devrait être "uploads/filename.ext"
+            // BASE_URL se termine généralement par "/"
+            let finalCoverPath = import.meta.env.BASE_URL + 'backoffice/' + pathFromDb;
+            // S'assurer qu'il n'y a pas de double slash, par ex. si BASE_URL est juste "/" et pathFromDb commencerait par "/" (ne devrait pas)
+            finalCoverPath = finalCoverPath.replace(/([^:]\/)\/\/+/g, "$1"); // Corrige http://host//path en http://host/path
+
+            console.log(`Final cover path for '${versionKey}': ${finalCoverPath}`); // Debug log
+            img.src = finalCoverPath;
+            img.alt = `Jaquette ${versionName}`;
+            img.classList.add('h-28', 'w-auto', 'max-w-full', 'object-contain', 'mb-1', 'rounded', 'shadow-md');
+            img.loading = 'lazy';
+            
+            
+            img.onerror = () => {
+                console.error(`Failed to load image: ${finalCoverPath}`);
+                img.style.border = '2px solid red'; // Visual indicator of failed load
+            };
+            
+            li.append(img);
+        } else {
+            const placeholderDiv = document.createElement('div');
+            placeholderDiv.classList.add('w-full', 'h-28', 'bg-slate-200', 'dark:bg-slate-700', 'flex', 'items-center', 'justify-center', 'text-xs', 'text-slate-500', 'dark:text-slate-400', 'mb-1', 'rounded', 'p-2', 'text-center', 'shadow-inner');
+            placeholderDiv.textContent = "Jaquette N/A";
+            li.append(placeholderDiv);
+        }
+
+        const span = document.createElement('span');
+        span.textContent = versionName;
+        span.classList.add('text-xs', 'sm:text-sm', 'mt-1');
+        li.append(span);
+        
         modal_DOM.listGames.append(li);
     });
+
     modal_DOM.nbGames.textContent = ` (${listGames.length})`;
     modal_DOM.listGames.closest("details").inert = listGames.length === 0;
 

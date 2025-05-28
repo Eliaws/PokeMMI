@@ -48,8 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
   openApisBtn?.addEventListener('click', async () => {
     await displayCollaborators();
     apisModal?.classList.remove('hidden');
+    apisModal?.classList.add('flex');
   });
   closeApisBtn?.addEventListener('click', () => {
     apisModal?.classList.add('hidden');
+    apisModal?.classList.remove('flex');
   });
 });
