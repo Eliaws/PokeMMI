@@ -1,6 +1,6 @@
 name: Main Pipeline
 
-run-name: ${{ github.actor }} deploy on ${{ github.ref_name }} 🚀
+run-name: ${{ github.actor }} is deploying to ${{ github.ref_name }} 🚀
 
 on:
   pull_request:
@@ -9,228 +9,200 @@ on:
     branches: [main]
 
 jobs:
+  ## Two next jobs can be merged, but not a good idea
+  # Lint the code before running tests
   lint:
     name: Lint code
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
+          node-version: lts/*
       - name: Install dependencies
         run: npm ci
       - name: Run ESLint
         run: npm run lint
-
-  unit_tests:
-    name: Unit tests
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run unit tests
-        run: npm run test --if-present
-
   e2e_tests:
     name: Run end-to-end tests
-    runs-on: ubuntu-latest
     needs: lint
-    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    timeout-minutes: 45 # Stop job after 45 minutes of inactivity
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository code
+        uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
-      - name: Set GitHub user
+          node-version: lts/*
+      - name: Set github user
         run: git config user.email "test@example.com" && git config user.name "CI/CD"
-      - name: Install dependencies
+      - name: Install the dependencies
         run: npm ci
-      - name: Install Playwright
+      - name: Install playwright
         run: npx playwright install --with-deps
       - name: Run smoke tests
         run: npx playwright test --project=chromium --grep @smoke
       - name: Run non-smoke tests
         run: npx playwright test --project=chromium --grep-invert @smoke
 
-  migrate_db:
-    name: Database migration
+  unit_tests:
+    name: Run unit tests
+    needs: lint
     runs-on: ubuntu-latest
-    needs: [unit_tests, e2e_tests]
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository code
+        uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
-      - name: Install dependencies
+          node-version: lts/*
+      - name: Set github user
+        run: git config --global user.email "test@example.com" && git config --global user.name "CI/CD"
+      - name: Install the dependencies
         run: npm ci
-      - name: Run migrations
-        run: npm run migrate --if-present
+      - name: Run unit tests
+        run: npm run test --if-present
 
   build:
-    name: Build production assets
+    name: Generate build
+    timeout-minutes: 10
+    needs: [lint, e2e_tests, unit_tests]
     runs-on: ubuntu-latest
-    needs: migrate_db
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository code
+        uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
-      - name: Install dependencies
+          node-version: lts/*
+      - name: Set github user
+        run: git config --global user.email "test@example.com" && git config --global user.name "CI/CD"
+      - name: Install the dependencies
         run: npm ci
+      # Copy local environment variables for Vite build
       - name: Copy and configure env for build
         run: |
+          # Copy template env file
           cp .env.development.dist .env
-          echo "VITE_BUILD_DATE=$(date +'%d/%m/%Y %H:%M:%S')" >> .env
-          echo "VITE_BUILD_AUTHOR=${{ github.actor }}" >> .env
-          echo "VITE_GITHUBTOKEN=${{ secrets.POKEMMI_COLABS }}" >> .env
-          echo "VITE_DEPLOY_BRANCH=${{ github.ref_name }}" >> .env
-      - name: Build site
+          # Inject build metadata into environment
+          echo "VITE_BUILD_DATE=$(date +'%d/%m/%Y %H:%M:%S')" >> "$GITHUB_ENV"
+          echo "VITE_BUILD_AUTHOR=${{ github.actor }}" >> "$GITHUB_ENV"
+          # Use GitHub token to display collaborators in header
+          echo "VITE_GITHUBTOKEN=${{ secrets.POKEMMI_COLABS }}" >> "$GITHUB_ENV"
+          # Use GitHub ref name to display branch name in header
+          echo "VITE_DEPLOY_BRANCH=${{ github.ref_name }}" >> "$GITHUB_ENV"
+          # DB connection string
+          echo "VITE_DB_HOST=${{ secrets.DB_HOST }}" >> "$GITHUB_ENV"
+          echo "VITE_DB_USER=${{ secrets.DB_USER }}" >> "$GITHUB_ENV"
+          echo "VITE_DB_PASS=${{ secrets.DB_PASS }}" >> "$GITHUB_ENV"
+          echo "VITE_DB_NAME=${{ secrets.DB_NAME }}" >> "$GITHUB_ENV"
+      - name: Create build
         run: npm run build
-      - name: Create .htaccess in dist
-        run: |
-          mkdir -p dist
-          cat > dist/.htaccess << 'EOF'
-          <Files ".env*">
-            Require all denied
-          </Files>
-          EOF
-      - name: Upload artifact
+      - name: Generate artifact
         uses: actions/upload-artifact@v4
         with:
-          name: site-dist
-          path: dist
+          name: pokemmi-frontend-build
+          path: ./dist
+
   deploy:
-    name: Deploy to production
-    runs-on: ubuntu-latest
     needs: build
+    runs-on: ubuntu-latest
     env:
+      SSH_PWD: ${{ secrets.SSH_PWD }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_SERVER: ${{ secrets.SSH_SERVER }}
-      SSH_PWD: ${{ secrets.SSH_PWD }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASS: ${{ secrets.DB_PASS }}
       DB_NAME: ${{ secrets.DB_NAME }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
-      - name: Download artifact
+
+      - name: Download frontend build artifact
         uses: actions/download-artifact@v4
         with:
-          name: site-dist
+          name: pokemmi-frontend-build
           path: dist
-          
-      - name: Install sshpass
-        run: sudo apt-get update && sudo apt-get install -y sshpass
-        
-      - name: Create config.php, .env and .htaccess for production
+
+      - name: Verify SSH Connection Variables
         run: |
-          API_DIR="${{ github.workspace }}/public/backoffice/api"
-          BACKOFFICE_DIR="${{ github.workspace }}/public/backoffice"
-          CONFIG_PHP_PATH="$API_DIR/config.php"
-          ENV_PATH="$BACKOFFICE_DIR/.env"
-          HTACCESS_PATH="$API_DIR/.htaccess"
+          echo "Attempting to use the following SSH connection details:"
+          echo "SSH User (from env): $SSH_USER"
+          echo "SSH Server (from env): $SSH_SERVER"
+        shell: bash
 
-          echo "Ensuring directories exist for production deployment"
-          mkdir -p "$API_DIR"
-          mkdir -p "$BACKOFFICE_DIR"
+      - name: Deploy Frontend (dist/)
+        run: |
+          echo "--- Deploying frontend from dist/ to production root ---"
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30" "${{ github.workspace }}/dist/" "$SSH_USER@$SSH_SERVER:www/"
+        shell: bash
 
-          echo "Creating production config.php with embedded secrets"
-          cat <<EOF > "$CONFIG_PHP_PATH"
-          <?php
-          // Production config - Generated by GitHub Actions on $(date)
+      - name: Create remote directory for Backoffice
+        run: |
+          echo "--- Creating remote directory for backoffice ---"
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_USER@$SSH_SERVER" "mkdir -p www/public/backoffice"
+        shell: bash
 
-          // Define database credentials directly from GitHub Secrets
-          \$DB_HOST = '${{ secrets.DB_HOST }}';
-          \$DB_USER = '${{ secrets.DB_USER }}';
-          \$DB_PASS = '${{ secrets.DB_PASS }}';
-          \$DB_NAME = '${{ secrets.DB_NAME }}';
+      - name: Deploy Backoffice (public/backoffice/)
+        run: |
+          echo "--- Attempting to deploy backoffice ---"
+          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30" "${{ github.workspace }}/public/backoffice/" "$SSH_USER@$SSH_SERVER:www/public/backoffice/"
+        shell: bash
 
-          // Include shared utilities
-          require_once __DIR__ . '/config_utils.php';
-
-          // Establish database connection
-          \$conn = new mysqli(\$DB_HOST, \$DB_USER, \$DB_PASS, \$DB_NAME);
-
-          // Check connection
-          if (\$conn->connect_error) {
-              error_log("CRITICAL: Database connection failed: " . \$conn->connect_error);
-              if (!headers_sent()) {
-                  header('Content-Type: application/json');
-                  http_response_code(500);
-              }
-              echo json_encode([
-                  "success" => false,
-                  "message" => "Internal Server Error: Database connection failed."
-              ]);
-              exit;
-          }
-
-          if (!\$conn->set_charset("utf8mb4")) {
-              error_log("Error loading character set utf8mb4: " . \$conn->error);
-          }
-          ?>
-          EOF
-
-          echo "Creating production .env for Node.js backoffice"
-          cat <<EOF > "$ENV_PATH"
-          # Production environment variables - Generated by GitHub Actions on $(date)
+      - name: Create .env and .htaccess files on server
+        run: |
+          echo "--- Creating .env and .htaccess files on server ---"
           
-          # Database configuration for Node.js
-          VITE_DB_HOST=${{ secrets.DB_HOST }}
-          VITE_DB_USER=${{ secrets.DB_USER }}
-          VITE_DB_PASS=${{ secrets.DB_PASS }}
-          VITE_DB_NAME=${{ secrets.DB_NAME }}
+          # Create .env file for PHP in www/backoffice/
+          # Secrets are expanded by GitHub Actions, date by remote server (runner's shell if EOF unquoted for date too)
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_USER@$SSH_SERVER" "mkdir -p www/backoffice && cat > www/backoffice/.env << EOF
+          # Generated by GitHub Actions on $(date --rfc-3339=seconds)
+          # PHP .env file
+
+          VITE_DB_HOST=\"${{ secrets.DB_HOST }}\"
+          VITE_DB_USER=\"${{ secrets.DB_USER }}\"
+          VITE_DB_PASS=\"${{ secrets.DB_PASS }}\"
+          VITE_DB_NAME=\"${{ secrets.DB_NAME }}\"
+          EOF"
           
-          # Production settings
-          NODE_ENV=production
-          PORT=3000
-          EOF          echo "Creating .htaccess to protect config files"
-          cat <<EOF > "$HTACCESS_PATH"
+          # Create .htaccess file in www/backoffice/ to protect .env
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_USER@$SSH_SERVER" "cat > www/backoffice/.htaccess << 'EOF'
+          <Files .env>
+              Require all denied
+          </Files>
+          <Files env.php> # Old file, ensure it's denied if present
+              Require all denied
+          </Files>
+          EOF"
+          
+          # Create .htaccess file in public/backoffice/api/ to protect config files (this path remains the same)
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_USER@$SSH_SERVER" "mkdir -p www/public/backoffice/api && cat > www/public/backoffice/api/.htaccess << 'EOF'
           <Files config.php>
               Require all denied
           </Files>
           <Files config_utils.php>
               Require all denied
           </Files>
-          <Files .env>
-              Require all denied
-          </Files>
           <Files test_config.php>
               Require all denied
           </Files>
-          <Files env.php>
-              Require all denied
-          </Files>
-          EOF
-
-          echo "Creating .htaccess in backoffice root"
-          cat <<EOF > "$BACKOFFICE_DIR/.htaccess"
+          # Deny access to any .env file that might accidentally end up here
           <Files .env>
               Require all denied
           </Files>
-          <Files env.php>
+          <Files env.php> # Old file, ensure it's denied if present
               Require all denied
           </Files>
-          EOF
+          EOF"
+          
+          echo "--- .env and .htaccess files created successfully ---"
         shell: bash
-        
-      - name: Deploy frontend
+
+      - name: Verify Backoffice Files on Server
         run: |
-          echo "--- Deploying frontend ---"
-          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" \
-          "${{ github.workspace }}/dist/" "$SSH_USER@$SSH_SERVER:~/www/"
-        shell: bash
-        
-      - name: Deploy backoffice
-        run: |
-          echo "--- Deploying backoffice ---"
-          sshpass -p "$SSH_PWD" rsync -Pavz --delete -e "ssh -o StrictHostKeyChecking=no" \
-          "${{ github.workspace }}/public/backoffice/" "$SSH_USER@$SSH_SERVER:~/www/public/backoffice/"
+          echo "--- Verifying contents of www/ on server ---"
+          sshpass -p "$SSH_PWD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_USER@$SSH_SERVER" "echo '--- Listing www/backoffice/ ---' && ls -la www/backoffice/ && echo '--- Content of www/backoffice/.env ---' && cat www/backoffice/.env && echo '--- Listing www/public/backoffice/api/ ---' && ls -la www/public/backoffice/api/ && echo '--- Content of www/public/backoffice/api/config.php \\(first 30 lines\\) ---' && head -n 30 www/public/backoffice/api/config.php"
         shell: bash
