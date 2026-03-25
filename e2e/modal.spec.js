@@ -35,7 +35,7 @@ test("should load next pokemon", { tag: "@smoke" }, async ({ page }) => {
 
     await Promise.all([
         page.waitForResponse((resp) =>
-            resp.url().includes(`https://tyradex.vercel.app/api/v1/pokemon/${pkmnId}`)
+            resp.url().includes(`https://tyradex.app/api/v1/pokemon/${pkmnId}`)
         ),
         page.waitForResponse((resp) =>
             resp.url().includes(`https://pokeapi.co/api/v2/pokemon-species/${pkmnId}`)
@@ -74,7 +74,7 @@ test("should open regional form", async ({ page }) => {
 
     await Promise.all([
         page.waitForResponse((resp) =>
-            resp.url().includes(`https://tyradex.vercel.app/api/v1/pokemon/${pkmnId}`)
+            resp.url().includes(`https://tyradex.app/api/v1/pokemon/${pkmnId}`)
         ),
         page.waitForResponse((resp) =>
             resp.url().includes(`https://pokeapi.co/api/v2/pokemon-species/${pkmnId}`)
@@ -99,7 +99,7 @@ test("should open regional form", async ({ page }) => {
     // Click and wait for network response related to regional Pokémon
     await Promise.all([
         page.waitForResponse((resp) =>
-            resp.url().includes(`https://tyradex.vercel.app/api/v1/pokemon/${pkmnId}/`)
+            resp.url().includes(`https://tyradex.app/api/v1/pokemon/${pkmnId}/`)
         ),
         firstRegionalPokemon.click(),
     ]);
@@ -115,7 +115,7 @@ test("should keep title tag value after scroll", async ({ page }) => {
         page.waitForResponse("https://pokeapi.co/api/v2/evolution-chain/10/"),
         page.waitForResponse(`https://pokeapi.co/api/v2/pokemon-species/${pkmnId}`),
         page.waitForResponse(`https://pokeapi.co/api/v2/pokemon/${pkmnId}`),
-        page.waitForResponse(`https://tyradex.vercel.app/api/v1/pokemon/${pkmnId}`),
+        page.waitForResponse(`https://tyradex.app/api/v1/pokemon/${pkmnId}`),
     ])
 
     const modal = page.locator("[data-testid='pokemon-modal'][open]");
