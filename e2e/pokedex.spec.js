@@ -35,7 +35,7 @@ test("should disable load generation button when there's no generation anymore",
     });
 
     const dexRequest = page.waitForResponse(
-        `https://tyradex.vercel.app/api/v1/gen/${fakeGeneration}`
+        `https://tyradex.app/api/v1/gen/${fakeGeneration}`
     );
 
     await expect(loadGenerationBtn).toHaveAttribute(
